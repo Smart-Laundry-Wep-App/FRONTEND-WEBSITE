@@ -11,9 +11,21 @@ export default function Dashboard() {
     <section className="content dashboard-content">
       <div className="stat-grid dashboard-stats">
         <StatCard label="TOTAL PESANAN" value={<><b>142</b> Pesanan</>} note="Kapasitas 82%" icon="receipt"/>
-        <StatCard label="PESANAN DIPROSES" value={<><b>38</b> Pesanan</>} note={<><span>21 Cuci</span><br/><span>17 Pengering</span></>} badge="Aktif" icon="wash"/>
+        <StatCard label="PESANAN DIPROSES" value={<><b>38</b> Pesanan</>} note={<><span>●21 Cuci</span><br/><span>●17 Pengering</span></>} badge="Aktif" icon="wash"/>
         <StatCard label="SELESAI" value={<><b>89</b> Paket</>} note={<><span>● 63 Diambil</span><br/><span>● 26 Di Rak</span></>} badge="On-Time" icon="receipt"/>
-        <StatCard label="PENDING/ANTREAN" value={<><b>142</b> Antrean</>} note={<><span>● 9 Konfirmasi</span><br/><span>● 6 Timbang</span></>} badge="Prioritas" icon="clock"/>
+        <StatCard
+  label="PENDING/ANTREAN"
+  value={<><b>142</b> Antrean</>}
+  note={
+    <>
+      <span>● 9 Konfirmasi</span>
+      <br />
+      <span>● 6 Timbang</span>
+    </>
+  }
+  badge="Prioritas"
+  icon="clock"
+/>
       </div>
       <div className="section-heading"><h2>Pesanan Terbaru</h2><p>Daftar transaksi laundry terkini yang tercatat pada sistem</p></div>
       <Pills items={["Semua","Sedang Cuci","Siap Diambil","Pengeringan","Filter"]}/>
