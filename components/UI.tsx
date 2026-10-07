@@ -16,10 +16,40 @@ export const IconMap: Record<string, LucideIcon> = {
   dollar: CircleDollarSign, tag: Tag, check: PackageCheck,
 };
 
-interface StatCardProps { label: ReactNode; value: ReactNode; note?: ReactNode; badge?: ReactNode; icon?: string; wide?: boolean }
-export function StatCard({ label, value, note, badge, icon = "receipt", wide = false }: StatCardProps) {
+interface StatCardProps {
+  label: ReactNode;
+  value: ReactNode;
+  note?: ReactNode;
+  badge?: ReactNode;
+  icon?: string;
+  wide?: boolean;
+}
+
+export function StatCard({
+  label,
+  value,
+  note,
+  badge,
+  icon = "receipt",
+  wide = false,
+}: StatCardProps) {
   const Icon = IconMap[icon] ?? ReceiptText;
-  return <div className={`stat-card ${wide ? "wide" : ""}`}><div className="stat-copy"><div className="stat-label">{label}</div><div className="stat-value">{value}</div>{note && <div className="stat-note">{note}</div>}</div><div className="stat-icon"><Icon size={25} strokeWidth={2} /></div>{badge && <span className="stat-badge">{badge}</span>}</div>;
+
+  return (
+    <div className={`stat-card ${wide ? "wide" : ""}`}>
+      <div className="stat-copy">
+        <div className="stat-label">{label}</div>
+        <div className="stat-value">{value}</div>
+        {note && <div className="stat-note">{note}</div>}
+      </div>
+
+      <div className="stat-icon">
+        <Icon size={25} strokeWidth={2} />
+      </div>
+
+      {badge && <span className="stat-badge">{badge}</span>}
+    </div>
+  );
 }
 
 interface SearchBoxProps { placeholder?: string; className?: string }
