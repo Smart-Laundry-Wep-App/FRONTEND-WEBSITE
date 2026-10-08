@@ -5,7 +5,7 @@ export default function AdminLayout({ children }: Readonly<{ children: ReactNode
   return (
     <div className="app-shell">
       <Sidebar />
-      <main className="main-area">{children}</main>
+      <main className="main-area page-fade">{children}</main>
     </div>
   );
 }
