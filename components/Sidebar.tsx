@@ -35,7 +35,9 @@ export default function Sidebar() {
       <nav className="sidebar-nav">
         {items.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className={`nav-item ${pathname === href ? "active" : ""}`}>
-            <Icon size={28} strokeWidth={1.9} />
+            <div className="nav-icon-container">
+              <Icon size={28} strokeWidth={1.9} />
+            </div>
             <span>{label}</span>
           </Link>
         ))}
