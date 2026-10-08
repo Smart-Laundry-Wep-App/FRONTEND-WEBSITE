@@ -1,20 +1,12 @@
 import Header from "@/components/Header";
 import { StatCard, Pills, EmptyTable, Pagination } from "@/components/UI";
 import { QrCode, Hourglass, Clock3, SquareCheckBig } from "lucide-react";
-import { useState, useEffect } from "react";
 
 export const metadata = { title: "Dashboard | SCA Smart Laundry" };
 
 export default function Dashboard() {
-  const [count, setCount] = useState(0);
   const rows = Array.from({length:7});
   
-  useEffect(() => {
-    const timer = setTimeout(() => setCount(1), 100);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  return <div className={`dashboard-container ${count > 0 ? "fade-in" : ""}`}>
   return <>
     <Header title="Dashboard" subtitle="Ringkasan & Aktivitas Operasional Laundry" />
     <section className="content dashboard-content">
