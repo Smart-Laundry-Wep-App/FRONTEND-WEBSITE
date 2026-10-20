@@ -3,7 +3,6 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
@@ -24,8 +23,8 @@ export default function Login() {
         <Image
           src="/logo.png"
           alt="Logo SCA Smart Laundry"
-          width={48}
-          height={48}
+          width={52}
+          height={52}
           className="auth-logo"
           priority
         />
@@ -53,7 +52,7 @@ export default function Login() {
         <label>EMAIL / USERNAME</label>
 
         <div className="auth-field">
-          <Mail size={23} />
+          <Mail size={20} />
 
           <input
             type="text"
@@ -62,16 +61,10 @@ export default function Login() {
         </div>
 
         {/* PASSWORD */}
-        <div className="auth-row">
-          <label>PASSWORD</label>
-
-          <a href="#">
-            Lupa Password?
-          </a>
-        </div>
+        <label>PASSWORD</label>
 
         <div className="auth-field">
-          <Lock size={23} />
+          <Lock size={20} />
 
           <input
             type={show ? "text" : "password"}
@@ -88,11 +81,16 @@ export default function Login() {
             }
           >
             {show ? (
-              <Eye size={23} />
+              <Eye size={20} />
             ) : (
-              <EyeOff size={23} />
+              <EyeOff size={20} />
             )}
           </button>
+        </div>
+
+        {/* LUPA PASSWORD - TEPAT DI BAWAH FIELD PASSWORD */}
+        <div className="auth-forgot">
+          <a href="#">Lupa Password?</a>
         </div>
 
         {/* LOGIN */}
@@ -110,7 +108,6 @@ export default function Login() {
 
         {/* SOCIAL LOGIN */}
         <div className="social-row">
-
           <button type="button">
             <b>G</b>
             Google
@@ -120,16 +117,7 @@ export default function Login() {
             <b>f</b>
             Facebook
           </button>
-
         </div>
-
-        {/* REGISTER */}
-        <p className="auth-foot">
-          Belum punya akun?{" "}
-          <Link href="/register">
-            Daftar Sekarang
-          </Link>
-        </p>
 
       </form>
     </main>
