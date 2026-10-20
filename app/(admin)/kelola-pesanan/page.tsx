@@ -1,7 +1,12 @@
 "use client";
 
+<<<<<<< HEAD
 import { useEffect, useMemo, useState, useRef, type FormEvent } from "react";
 import { X, User, Phone, WashingMachine, Scale, Coins, CheckCircle2, AlertCircle, Plus, ClipboardList, ChevronDown } from "lucide-react";
+=======
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { X } from "lucide-react";
+>>>>>>> ca793b29824f902246ee911d740aad2dd5f151e6
 import Header from "@/components/Header";
 import {
   SearchBox,
@@ -49,6 +54,7 @@ function formatRupiah(amount: number) {
   }).format(amount);
 }
 
+<<<<<<< HEAD
 /* ─── ADD ORDER MODAL ─── */
 interface AddOrderModalProps {
   onClose: () => void;
@@ -231,6 +237,8 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
 }
 
 /* ─── PAGE ─── */
+=======
+>>>>>>> ca793b29824f902246ee911d740aad2dd5f151e6
 export default function KelolaPesanan() {
   const [orders, setOrders] = useState<LaundryOrder[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -282,6 +290,10 @@ export default function KelolaPesanan() {
     });
   }, [orders, search, statusFilter]);
 
+<<<<<<< HEAD
+=======
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE));
+>>>>>>> ca793b29824f902246ee911d740aad2dd5f151e6
   const visibleOrders = filteredOrders.slice(
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE,
@@ -390,7 +402,16 @@ export default function KelolaPesanan() {
         />
 
         <EmptyTable
+<<<<<<< HEAD
           headers={["ID PELANGGAN", "PELANGGAN", "LAYANAN STATUS", "STATUS"]}
+=======
+          headers={[
+            "NO. PELANGGAN",
+            "PELANGGAN",
+            "LAYANAN STATUS",
+            "STATUS",
+          ]}
+>>>>>>> ca793b29824f902246ee911d740aad2dd5f151e6
           rows={0}
         >
           {visibleOrders.length ? visibleOrders.map((order) => (
@@ -405,7 +426,13 @@ export default function KelolaPesanan() {
               </td>
               <td>
                 <strong>{order.service}</strong>
+<<<<<<< HEAD
                 <small>{order.weight} kg · {formatRupiah(order.weight * order.pricePerKg)}</small>
+=======
+                <small>
+                  {order.weight} kg · {formatRupiah(order.weight * order.pricePerKg)}
+                </small>
+>>>>>>> ca793b29824f902246ee911d740aad2dd5f151e6
               </td>
               <td>
                 <select
@@ -423,9 +450,13 @@ export default function KelolaPesanan() {
           )) : (
             <tr>
               <td className="order-empty" colSpan={4}>
+<<<<<<< HEAD
                 {orders.length
                   ? "Tidak ada pesanan yang cocok."
                   : "Belum ada pesanan. Klik \u201cTambah Pesanan\u201d untuk mulai mencatat."}
+=======
+                {orders.length ? "Tidak ada pesanan yang cocok." : "Belum ada pesanan. Klik “Tambah Pesanan” untuk mulai mencatat."}
+>>>>>>> ca793b29824f902246ee911d740aad2dd5f151e6
               </td>
             </tr>
           )}
@@ -440,11 +471,82 @@ export default function KelolaPesanan() {
       </section>
 
       {isFormOpen && (
+<<<<<<< HEAD
         <AddOrderModal
           onClose={() => setIsFormOpen(false)}
           onSubmit={addOrder}
           formError={formError}
         />
+=======
+        <div
+          className="modal-overlay open"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsFormOpen(false);
+          }}
+        >
+          <div
+            className="modal-content order-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-order-title"
+          >
+            <div className="order-modal-heading">
+              <div>
+                <h2 id="add-order-title">Tambah Pesanan</h2>
+                <p>Masukkan data pelanggan dan detail layanan laundry.</p>
+              </div>
+              <button
+                className="order-modal-close"
+                type="button"
+                aria-label="Tutup form"
+                onClick={() => setIsFormOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form className="order-form" onSubmit={addOrder}>
+              <div className="order-form-grid">
+                <label>
+                  Nama pelanggan
+                  <input name="customer" required maxLength={80} placeholder="Nama lengkap pelanggan" />
+                </label>
+                <label>
+                  Nomor telepon
+                  <input name="phone" required maxLength={20} type="tel" placeholder="08xxxxxxxxxx" />
+                </label>
+                <label>
+                  Layanan
+                  <input name="service" required maxLength={80} placeholder="Contoh: Cuci Kering Setrika" />
+                </label>
+                <label>
+                  Status pesanan
+                  <select name="status" defaultValue="Sedang Cuci">
+                    {STATUSES.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Berat (kg)
+                  <input name="weight" required type="number" min="0.1" step="0.1" defaultValue="1" />
+                </label>
+                <label>
+                  Tarif per kg (Rp)
+                  <input name="pricePerKg" required type="number" min="1" step="500" defaultValue="9500" />
+                </label>
+              </div>
+              <p className="order-total-note">Total dihitung otomatis dari berat × tarif per kg.</p>
+              {formError && <p className="order-error" role="alert">{formError}</p>}
+              <div className="order-form-actions">
+                <button className="secondary-button" type="button" onClick={() => setIsFormOpen(false)}>
+                  Batal
+                </button>
+                <PrimaryButton type="submit">Simpan Pesanan</PrimaryButton>
+              </div>
+            </form>
+          </div>
+        </div>
+>>>>>>> ca793b29824f902246ee911d740aad2dd5f151e6
       )}
     </>
   );
