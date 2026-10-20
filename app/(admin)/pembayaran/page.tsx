@@ -1,6 +1,9 @@
 "use client";
 
+<<<<<<< HEAD
 import { useEffect, useRef, useState, type RefObject } from "react";
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 import Header from "@/components/Header";
 import {
   SearchBox,
@@ -8,6 +11,7 @@ import {
   Pills,
   EmptyTable,
   Pagination,
+<<<<<<< HEAD
 } from "@/components/UI";
 import { Trash2, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 
@@ -180,6 +184,13 @@ export default function Pembayaran() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const calendarAnchorRef = useRef<HTMLDivElement>(null);
 
+=======
+  SecondaryButton,
+} from "@/components/UI";
+import { Trash2, CalendarDays } from "lucide-react";
+
+export default function Pembayaran() {
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
   return (
     <>
       <Header
@@ -221,6 +232,7 @@ export default function Pembayaran() {
               Delete
             </button>
 
+<<<<<<< HEAD
             <div className="payment-calendar-anchor" ref={calendarAnchorRef}>
               <button
                 type="button"
@@ -239,6 +251,11 @@ export default function Pembayaran() {
                 />
               )}
             </div>
+=======
+            <SecondaryButton icon={CalendarDays}>
+              Filter Tanggal
+            </SecondaryButton>
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
           </div>
         </div>
 

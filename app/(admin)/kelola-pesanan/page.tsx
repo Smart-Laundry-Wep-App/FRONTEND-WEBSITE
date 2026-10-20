@@ -345,7 +345,11 @@ export default function KelolaPesanan() {
         subtitle="Kelola pesanan masuk, pantau status pengerjaan, dan atur jadwal pengantaran pelanggan"
       />
 
+<<<<<<< HEAD
       <section className="content orders-content">
+=======
+      <section className="content">
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
         <div className="toolbar order-toolbar">
           <SearchBox
             placeholder="Cari pesanan (No. order, nama pelanggan, layanan...)"
@@ -435,7 +439,10 @@ export default function KelolaPesanan() {
           total={filteredOrders.length}
           perPage={ITEMS_PER_PAGE}
           page={page}
+<<<<<<< HEAD
           minPages={3}
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
           onPageChange={setPage}
         />
       </section>
