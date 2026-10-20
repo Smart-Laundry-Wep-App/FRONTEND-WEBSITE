@@ -1,6 +1,9 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+<<<<<<< HEAD
 import { createPortal } from "react-dom";
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 import Header from "@/components/Header";
 import { StatCard, SearchBox, SecondaryButton, Pills, EmptyTable, Pagination } from "@/components/UI";
 import { CalendarDays, Download, ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -39,6 +42,7 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
   const [end,   setEnd]     = useState<Date | null>(null);
   const [hover, setHover]   = useState<Date | null>(null);
   const [visible, setVisible] = useState(false);
+<<<<<<< HEAD
   const [mounted, setMounted] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +50,12 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
     setMounted(true);
     requestAnimationFrame(() => setVisible(true));
   }, []);
+=======
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  /* Animate in */
+  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 
   /* Click outside → close */
   useEffect(() => {
@@ -104,6 +114,7 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
 
   const effectiveEnd = end ?? hover;
 
+<<<<<<< HEAD
   const calendarModal = (
     <div className="history-calendar-overlay">
       <div
@@ -113,6 +124,15 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
         aria-modal="true"
         aria-label="Pilih rentang tanggal"
       >
+=======
+  return (
+    <div
+      ref={popupRef}
+      className={`cal-popup${visible ? " cal-popup--open" : ""}`}
+      role="dialog"
+      aria-label="Pilih rentang tanggal"
+    >
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
       {/* Presets sidebar */}
       <div className="cal-presets">
         <p className="cal-presets-title">Pintasan</p>
@@ -209,6 +229,7 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
       </div>
 
       {/* Close icon */}
+<<<<<<< HEAD
         <button type="button" className="cal-close" aria-label="Tutup kalender" onClick={onClose}>
           <X size={14} />
         </button>
@@ -217,6 +238,13 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
   );
 
   return mounted ? createPortal(calendarModal, document.body) : null;
+=======
+      <button type="button" className="cal-close" aria-label="Tutup kalender" onClick={onClose}>
+        <X size={14} />
+      </button>
+    </div>
+  );
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 }
 
 /* ─── PAGE ─── */
@@ -271,6 +299,7 @@ export default function RiwayatTransaksi() {
           </div>
           <div className="chart-svg-wrap">
             <svg viewBox="0 0 820 155" preserveAspectRatio="none">
+<<<<<<< HEAD
               <g>
                 <path
                   d="M70 146 L120 98 L210 55 L330 85 L465 78 L630 28 L770 35 L770 155 L70 155 Z"
@@ -291,6 +320,17 @@ export default function RiwayatTransaksi() {
                 <circle className="chart-point" cx="465" cy="78" r="3.5" fill="#ff8a65" />
                 <circle className="chart-point" cx="630" cy="28" r="3.5" fill="#4d9d00" />
                 <circle className="chart-point" cx="770" cy="35" r="3.5" fill="#4d9d00" />
+=======
+              <path d="M30 150 L70 98 L135 98 L230 55 L350 88 L500 78 L650 30 L790 38 L790 150 Z" fill="rgba(68,94,221,.68)" stroke="#2531b6" strokeWidth="1.2"/>
+              <g fill="#2531b6">
+                <circle cx="70" cy="98" r="3.5"/>
+                <circle cx="135" cy="98" r="3.5"/>
+                <circle cx="230" cy="55" r="3.5"/>
+                <circle cx="350" cy="88" r="3.5"/>
+                <circle cx="500" cy="78" r="3.5"/>
+                <circle cx="650" cy="30" r="3.5"/>
+                <circle cx="790" cy="38" r="3.5"/>
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
               </g>
             </svg>
           </div>

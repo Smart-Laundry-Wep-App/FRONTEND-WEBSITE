@@ -927,6 +927,7 @@ td {
               color var(--duration-instant) var(--ease-smooth);
 }
 
+<<<<<<< HEAD
 .orders-content .table-wrap td > strong,
 .orders-content .table-wrap td > small {
   display: block;
@@ -936,6 +937,8 @@ td {
   margin-top: 4px;
 }
 
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 tbody tr {
   transition: background-color 0.15s var(--ease-smooth),
               transform 0.15s var(--ease-smooth);
@@ -1479,7 +1482,10 @@ td:first-child {
   gap: 12px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+<<<<<<< HEAD
   z-index: 450;
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 }
 
 .history-toolbar .search-box {
@@ -1584,6 +1590,7 @@ td:first-child {
   display: block;
 }
 
+<<<<<<< HEAD
 .chart-line {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
@@ -1635,6 +1642,8 @@ td:first-child {
   }
 }
 
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 /* ================================
    PROFILE
 ================================ */
@@ -1724,6 +1733,7 @@ td:first-child {
   color: #94a3b8;
 }
 
+<<<<<<< HEAD
 .profile-summary .secondary-button.compact {
   background: #EBEFFF;
   border: 1px solid #1B22A7;
@@ -1735,6 +1745,8 @@ td:first-child {
   stroke: #94a3b8;
 }
 
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 .profile-wrap {
   position: relative;
   flex-shrink: 0;
@@ -1798,19 +1810,28 @@ td:first-child {
 .form-field {
   height: 46px;
   margin-top: 8px;
+<<<<<<< HEAD
   background: #EBEFFF;
+=======
+  background: #f8fafc;
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 0 14px;
+<<<<<<< HEAD
   color: #94a3b8;
+=======
+  color: #EBEFFF;
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
   border: 1px solid #1b22a7;
   transition: background-color var(--duration-fast) var(--ease-smooth),
               border-color var(--duration-fast) var(--ease-smooth),
               box-shadow var(--duration-fast) var(--ease-smooth);
 }
 
+<<<<<<< HEAD
 .form-field svg,
 .role-field svg {
   color: #94a3b8;
@@ -1818,6 +1839,8 @@ td:first-child {
   flex-shrink: 0;
 }
 
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 .form-field:focus-within {
   background-color: #fff;
   border-color: var(--navy);
@@ -2752,6 +2775,7 @@ td:first-child {
    SOCIAL ICON
 ================================ */
 
+<<<<<<< HEAD
 .social-row .social-icon {
   width: 18px;
   height: 18px;
@@ -2760,6 +2784,13 @@ td:first-child {
 
 .social-row .facebook-icon {
   color: #1877f2;
+=======
+.social-row b {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  margin-right: 2px;
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 }
 .stat-card {
   position: relative;
@@ -3951,6 +3982,7 @@ thead tr {
   background: #f5f7ff;
   color: #4160E6;
   border-color: #4160E6;
+<<<<<<< HEAD
 }
 
 .payment-calendar-anchor {
@@ -4130,4 +4162,6 @@ thead tr {
   background: #fff5f5;
   color: #dc2626;
   border-color: #dc2626;
+=======
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
 }

@@ -17,7 +17,11 @@
   "devDependencies": {
     "@types/node": "20.17.6",
     "@types/react": "19.3.0",
+<<<<<<< HEAD
     "eslint": "^9.39.5",
+=======
+    "eslint": "^8.57.0",
+>>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
     "eslint-config-next": "^16.4.2",
     "typescript": "7.0.2"
   }
