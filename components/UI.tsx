@@ -183,7 +183,6 @@ export function Pills({ items, active = 0, onChange, className = "" }: PillsProp
   );
 }
 
-<<<<<<< HEAD
 interface PaginationProps { total?: number; perPage?: number; page?: number; minPages?: number; onPageChange?: (p: number) => void }
 export function Pagination({ total = 142, perPage = 5, page = 1, minPages = 3, onPageChange }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
@@ -199,20 +198,6 @@ export function Pagination({ total = 142, perPage = 5, page = 1, minPages = 3, o
           <button type="button" key={p} className={p === page ? "current" : ""} onClick={() => onPageChange?.(p)}>{p}</button>
         ))}
         <button type="button" onClick={() => onPageChange?.(Math.min(navigablePages, page + 1))}><ChevronRight size={19} /></button>
-=======
-interface PaginationProps { total?: number; perPage?: number; page?: number; onPageChange?: (p: number) => void }
-export function Pagination({ total = 142, perPage = 5, page = 1, onPageChange }: PaginationProps) {
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
-  return (
-    <div className="pagination-row">
-      <span>Menampilkan {Math.min((page - 1) * perPage + 1, total)} - {Math.min(page * perPage, total)} dari {total} pesanan</span>
-      <div className="pagination">
-        <button type="button" onClick={() => onPageChange?.(Math.max(1, page - 1))}><ChevronLeft size={19} /></button>
-        {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map(p => (
-          <button type="button" key={p} className={p === page ? "current" : ""} onClick={() => onPageChange?.(p)}>{p}</button>
-        ))}
-        <button type="button" onClick={() => onPageChange?.(Math.min(totalPages, page + 1))}><ChevronRight size={19} /></button>
->>>>>>> 34f88570987b3f384c89c9cd79d930a8f15f7439
       </div>
     </div>
   );
