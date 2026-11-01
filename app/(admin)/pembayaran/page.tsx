@@ -176,9 +176,43 @@ function PaymentCalendar({ anchorRef, onClose }: PaymentCalendarProps) {
   );
 }
 
+import { DUMMY_PAYMENTS, type DummyPayment } from "@/lib/dummyData";
+
+function formatRupiah(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+const PAYMENT_PILLS = ["Semua", "Menunggu Pembayaran", "Sudah Dibayar", "Selesai"];
+
 export default function Pembayaran() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const calendarAnchorRef = useRef<HTMLDivElement>(null);
+  const [search, setSearch] = useState("");
+  const [selectedPill, setSelectedPill] = useState("Semua");
+  const [page, setPage] = useState(1);
+  const perPage = 5;
+
+  const filteredPayments = DUMMY_PAYMENTS.filter((payment) => {
+    const q = search.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      payment.orderId.toLowerCase().includes(q) ||
+      payment.customer.toLowerCase().includes(q) ||
+      payment.phone.includes(q) ||
+      payment.paymentMethod.toLowerCase().includes(q);
+
+    if (!matchesSearch) return false;
+
+    if (selectedPill === "Semua") return true;
+    if (selectedPill === "Sudah Dibayar") return payment.status === "Lunas";
+    return payment.status.toLowerCase() === selectedPill.toLowerCase();
+  });
+
+  const visiblePayments = filteredPayments.slice((page - 1) * perPage, page * perPage);
 
   return (
     <>
@@ -189,7 +223,14 @@ export default function Pembayaran() {
 
       <section className="content">
         <div className="payment-top">
-          <SearchBox placeholder="Cari No Pembayaran, Nama Pelanggan" />
+          <SearchBox
+            placeholder="Cari No Pembayaran, Nama Pelanggan..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
 
           <StatCard
             label="MENUNGGU PELUNASAN"
@@ -208,15 +249,20 @@ export default function Pembayaran() {
 
         <div className="payment-controls">
           <Pills
-            items={[
-              "Menunggu Pembayaran",
-              "Sudah Dibayar",
-              "Selesai",
-            ]}
+            items={PAYMENT_PILLS}
+            active={PAYMENT_PILLS.indexOf(selectedPill)}
+            onChange={(index) => {
+              setSelectedPill(PAYMENT_PILLS[index]);
+              setPage(1);
+            }}
           />
 
           <div className="button-group">
-            <button className="danger-button">
+            <button
+              className="danger-button"
+              type="button"
+              onClick={() => alert("Pilih data transaksi yang ingin dihapus.")}
+            >
               <Trash2 size={19} />
               Delete
             </button>
@@ -250,9 +296,48 @@ export default function Pembayaran() {
             "STATUS",
             "PEMBAYARAN",
           ]}
-        />
+          rows={0}
+        >
+          {visiblePayments.length > 0 ? (
+            visiblePayments.map((p) => (
+              <tr key={p.id}>
+                <td>
+                  <strong>{p.orderId}</strong>
+                  <small>{p.paidAt ?? "Menunggu konfirmasi"}</small>
+                </td>
+                <td>
+                  <strong>{p.customer}</strong>
+                  <small>{p.phone}</small>
+                </td>
+                <td>
+                  <strong>{formatRupiah(p.total)}</strong>
+                </td>
+                <td>
+                  <span className={`status ${p.status.toLowerCase().replaceAll(" ", "-")}`}>
+                    {p.status}
+                  </span>
+                </td>
+                <td>
+                  <strong>{p.paymentMethod}</strong>
+                  <small>{p.id}</small>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
+                Tidak ada data pembayaran yang sesuai kriteria pencarian.
+              </td>
+            </tr>
+          )}
+        </EmptyTable>
 
-        <Pagination />
+        <Pagination
+          total={filteredPayments.length}
+          perPage={perPage}
+          page={page}
+          onPageChange={setPage}
+        />
       </section>
     </>
   );
