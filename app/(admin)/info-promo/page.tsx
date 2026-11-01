@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Header from "@/components/Header";
 import {
   StatCard,
   SearchBox,
-  SecondaryButton,
   Pills,
   EmptyTable,
   Pagination,
 } from "@/components/UI";
-import { FileDown, Plus, Pencil, Trash2 } from "lucide-react";
+import { FileDown, Plus } from "lucide-react";
 import { DUMMY_PROMOS, type DummyPromo } from "@/lib/dummyData";
 
 const PROMO_PILLS = ["Semua", "Aktif", "Non Aktif"];
@@ -19,9 +18,11 @@ export default function InfoPromo() {
   const [search, setSearch] = useState("");
   const [selectedPill, setSelectedPill] = useState("Semua");
   const [page, setPage] = useState(1);
+  const [promos, setPromos] = useState<DummyPromo[]>(DUMMY_PROMOS);
+  const [isPromoFormOpen, setIsPromoFormOpen] = useState(false);
   const perPage = 5;
 
-  const filteredPromos = DUMMY_PROMOS.filter((promo) => {
+  const filteredPromos = promos.filter((promo) => {
     const q = search.trim().toLowerCase();
     const matchesSearch =
       !q ||
@@ -35,6 +36,47 @@ export default function InfoPromo() {
   });
 
   const visiblePromos = filteredPromos.slice((page - 1) * perPage, page * perPage);
+
+  function exportPromoReport() {
+    const header = ["ID", "Nama Promo", "Kode Promo", "Diskon", "Periode", "Status"];
+    const rows = filteredPromos.map((promo) => [
+      promo.id,
+      promo.name,
+      promo.code,
+      promo.discount,
+      promo.period,
+      promo.status,
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "laporan-promo.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function addPromo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const newPromo: DummyPromo = {
+      id: `prm-${Date.now().toString().slice(-6)}`,
+      name: String(formData.get("name") ?? "").trim(),
+      code: String(formData.get("code") ?? "").trim().toUpperCase(),
+      discount: String(formData.get("discount") ?? "").trim(),
+      period: String(formData.get("period") ?? "").trim(),
+      status: String(formData.get("status") ?? "Aktif") as DummyPromo["status"],
+    };
+    setPromos((current) => [newPromo, ...current]);
+    setIsPromoFormOpen(false);
+    setSelectedPill("Semua");
+    setPage(1);
+  }
 
   return (
     <>
@@ -82,9 +124,21 @@ export default function InfoPromo() {
               setPage(1);
             }}
           />
-          <div className="button-group">
-            <SecondaryButton icon={FileDown}>EXPORT LAPORAN</SecondaryButton>
-            <SecondaryButton icon={Plus}>PROMO BARU</SecondaryButton>
+          <div className="promo-action-cards">
+            <button type="button" className="promo-action-card" onClick={exportPromoReport}>
+              <span className="promo-action-icon"><FileDown size={20} /></span>
+              <span>
+                <strong>Export Laporan</strong>
+                <small>Unduh data promo CSV</small>
+              </span>
+            </button>
+            <button type="button" className="promo-action-card" onClick={() => setIsPromoFormOpen(true)}>
+              <span className="promo-action-icon"><Plus size={21} /></span>
+              <span>
+                <strong>Promo Baru</strong>
+                <small>Tambah promosi baru</small>
+              </span>
+            </button>
           </div>
         </div>
 
@@ -142,6 +196,54 @@ export default function InfoPromo() {
           onPageChange={setPage}
         />
       </section>
+
+      {isPromoFormOpen && (
+        <div className="promo-modal-overlay" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setIsPromoFormOpen(false);
+        }}>
+          <form className="promo-modal-card" onSubmit={addPromo}>
+            <div className="promo-modal-header">
+              <div className="promo-modal-header-icon"><Plus size={22} /></div>
+              <div className="promo-modal-header-copy">
+                <h2>Tambah Promo</h2>
+                <p>Isi detail kupon diskon dan periode promosi</p>
+              </div>
+              <button type="button" className="promo-modal-close" aria-label="Tutup" onClick={() => setIsPromoFormOpen(false)}>×</button>
+            </div>
+
+            <div className="promo-form-grid">
+              <label>
+                Nama Promo
+                <input name="name" required placeholder="Contoh: Diskon Akhir Pekan" />
+              </label>
+              <label>
+                Kode Promo
+                <input name="code" required placeholder="Contoh: WEEKENDHEMAT" />
+              </label>
+              <label>
+                Diskon
+                <input name="discount" required placeholder="Contoh: 20% atau Rp 10.000" />
+              </label>
+              <label>
+                Periode Berlaku
+                <input name="period" required placeholder="Contoh: 01 - 31 Des 2026" />
+              </label>
+              <label className="promo-form-full">
+                Status
+                <select name="status" defaultValue="Aktif">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Non Aktif">Non Aktif</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="promo-modal-actions">
+              <button type="button" className="promo-modal-cancel" onClick={() => setIsPromoFormOpen(false)}>Batal</button>
+              <button type="submit" className="promo-modal-submit"><Plus size={18} />Simpan Promo</button>
+            </div>
+          </form>
+        </div>
+      )}
     </>
   );
 }

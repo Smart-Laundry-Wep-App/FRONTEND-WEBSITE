@@ -44,6 +44,10 @@ export default function Notifikasi() {
     };
 
     setNotifications([newItem, ...notifications]);
+    const countKey = "sca-unread-notifications";
+    const currentCount = Number(window.localStorage.getItem(countKey) ?? "0");
+    window.localStorage.setItem(countKey, String((Number.isFinite(currentCount) ? currentCount : 0) + 1));
+    window.dispatchEvent(new Event("sca-notifications-updated"));
     setNewTitle("");
     setNewMessage("");
     setIsModalOpen(false);
