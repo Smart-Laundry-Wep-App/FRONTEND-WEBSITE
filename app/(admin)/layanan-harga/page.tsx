@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Header from "@/components/Header";
 import {
   StatCard,
@@ -26,9 +26,11 @@ export default function LayananHarga() {
   const [search, setSearch] = useState("");
   const [selectedPill, setSelectedPill] = useState("Semua Layanan");
   const [page, setPage] = useState(1);
+  const [services, setServices] = useState<DummyService[]>(DUMMY_SERVICES);
+  const [isServiceFormOpen, setIsServiceFormOpen] = useState(false);
   const perPage = 5;
 
-  const filteredServices = DUMMY_SERVICES.filter((service) => {
+  const filteredServices = services.filter((service) => {
     const q = search.trim().toLowerCase();
     const matchesSearch =
       !q ||
@@ -42,6 +44,34 @@ export default function LayananHarga() {
   });
 
   const visibleServices = filteredServices.slice((page - 1) * perPage, page * perPage);
+
+  function exportServiceReport() {
+    const header = ["ID", "Nama Layanan", "Kategori", "Estimasi Waktu", "Tarif", "Status"];
+    const rows = filteredServices.map((service) => [service.id, service.name, service.category, service.estimatedTime, service.price, service.status]);
+    const csv = [header, ...rows].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "laporan-layanan.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function addService(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setServices((current) => [{
+      id: `srv-${Date.now().toString().slice(-6)}`,
+      name: String(formData.get("name") ?? "").trim(),
+      category: String(formData.get("category") ?? "Cuci Kiloan") as DummyService["category"],
+      estimatedTime: String(formData.get("estimatedTime") ?? "").trim(),
+      price: String(formData.get("price") ?? "").trim(),
+      status: String(formData.get("status") ?? "Aktif") as DummyService["status"],
+    }, ...current]);
+    setIsServiceFormOpen(false);
+    setSelectedPill("Semua Layanan");
+    setPage(1);
+  }
 
   return (
     <>
@@ -89,8 +119,16 @@ export default function LayananHarga() {
               setPage(1);
             }}
           />
-          <SecondaryButton icon={FileDown}>EXPORT CSV</SecondaryButton>
-          <SecondaryButton icon={ReceiptText}>TAMBAH LAYANAN</SecondaryButton>
+          <div className="service-action-cards">
+            <button type="button" className="service-action-card" onClick={exportServiceReport}>
+              <span className="service-action-icon"><FileDown size={20} /></span>
+              <span><strong>Export CSV</strong><small>Unduh data layanan</small></span>
+            </button>
+            <button type="button" className="service-action-card" onClick={() => setIsServiceFormOpen(true)}>
+              <span className="service-action-icon"><ReceiptText size={20} /></span>
+              <span><strong>Tambah Layanan</strong><small>Daftar layanan baru</small></span>
+            </button>
+          </div>
         </div>
 
         {/* FILTER */}
@@ -166,6 +204,34 @@ export default function LayananHarga() {
           onPageChange={setPage}
         />
       </section>
+
+      {isServiceFormOpen && (
+        <div className="promo-modal-overlay" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setIsServiceFormOpen(false);
+        }}>
+          <form className="promo-modal-card" onSubmit={addService}>
+            <div className="promo-modal-header">
+              <div className="promo-modal-header-icon"><ReceiptText size={22} /></div>
+              <div className="promo-modal-header-copy">
+                <h2>Tambah Layanan</h2>
+                <p>Isi detail layanan dan tarif laundry</p>
+              </div>
+              <button type="button" className="promo-modal-close" aria-label="Tutup" onClick={() => setIsServiceFormOpen(false)}>×</button>
+            </div>
+            <div className="promo-form-grid">
+              <label>Nama Layanan<input name="name" required placeholder="Contoh: Cuci Kering Lipat" /></label>
+              <label>Kategori<select name="category" defaultValue="Cuci Kiloan"><option>Cuci Kiloan</option><option>Cuci Satuan</option><option>Express</option><option>Khusus</option></select></label>
+              <label>Estimasi Waktu<input name="estimatedTime" required placeholder="Contoh: 24 Jam" /></label>
+              <label>Tarif<input name="price" required placeholder="Contoh: Rp 9.500 / kg" /></label>
+              <label className="promo-form-full">Status<select name="status" defaultValue="Aktif"><option>Aktif</option><option>Non Aktif</option></select></label>
+            </div>
+            <div className="promo-modal-actions">
+              <button type="button" className="promo-modal-cancel" onClick={() => setIsServiceFormOpen(false)}>Batal</button>
+              <button type="submit" className="promo-modal-submit"><ReceiptText size={18} />Simpan Layanan</button>
+            </div>
+          </form>
+        </div>
+      )}
     </>
   );
 }

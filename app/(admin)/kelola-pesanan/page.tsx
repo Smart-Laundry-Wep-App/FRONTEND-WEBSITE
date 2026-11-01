@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef, type FormEvent } from "react";
-import { X, User, Phone, WashingMachine, Scale, Coins, CheckCircle2, AlertCircle, Plus, ClipboardList, ChevronDown } from "lucide-react";
+import { X, User, Phone, WashingMachine, Scale, Coins, CheckCircle2, AlertCircle, Plus, ClipboardList, ChevronDown, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import {
   SearchBox,
@@ -60,7 +60,7 @@ interface AddOrderModalProps {
 
 function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const [weight, setWeight] = useState(1);
+  const [weight, setWeight] = useState("1");
   const [price, setPrice] = useState(9500);
   const [visible, setVisible] = useState(false);
 
@@ -71,7 +71,8 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const total = weight * price;
+  const numericWeight = Number(weight.replace(",", "."));
+  const total = (Number.isFinite(numericWeight) ? Math.max(1, numericWeight) : 1) * price;
 
   return (
     <div
@@ -220,13 +221,13 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   id="om-weight"
                   name="weight"
                   required
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   min="1"
-                  step="0.5"
-                  value={weight}
+                  value={weight.replace(".", ",")}
                   onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    setWeight(isNaN(val) ? 1 : Math.max(1, val));
+                    const value = e.target.value.replace(/[^0-9,.]/g, "").replace(/(,.*),/g, "$1");
+                    setWeight(value);
                   }}
                 />
                 <span className="om-input-suffix">kg</span>
@@ -278,6 +279,19 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
               Simpan Pesanan
             </button>
           </div>
+          <button
+            type="button"
+            className="om-btn-delete-card"
+            onClick={(event) => {
+              const form = event.currentTarget.closest("form");
+              form?.reset();
+              setWeight("1");
+              setPrice(9500);
+            }}
+          >
+            <Trash2 size={18} />
+            <span>Delete</span>
+          </button>
         </form>
       </div>
     </div>
@@ -390,7 +404,7 @@ export default function KelolaPesanan() {
     const customer = String(formData.get("customer") ?? "").trim();
     const phone = String(formData.get("phone") ?? "").trim();
     const service = String(formData.get("service") ?? "").trim();
-    const weight = Number(formData.get("weight"));
+    const weight = Number(String(formData.get("weight") ?? "0").trim().replace(",", "."));
     const pricePerKg = Number(formData.get("pricePerKg"));
     const status = String(formData.get("status") ?? "");
 
@@ -483,6 +497,12 @@ export default function KelolaPesanan() {
     );
   }
 
+  function deleteOrder(id: string) {
+    if (!window.confirm("Yakin ingin menghapus pesanan ini?")) return;
+    setOrders((current) => current.filter((order) => order.id !== id));
+    setPage((current) => Math.max(1, current));
+  }
+
   return (
     <>
       <Header
@@ -523,7 +543,7 @@ export default function KelolaPesanan() {
         />
 
         <EmptyTable
-          headers={["ID PELANGGAN", "PELANGGAN", "LAYANAN STATUS", "STATUS"]}
+          headers={["ID PELANGGAN", "PELANGGAN", "LAYANAN STATUS", "STATUS", "AKSI"]}
           rows={0}
         >
           {visibleOrders.length ? visibleOrders.map((order) => (
@@ -542,7 +562,7 @@ export default function KelolaPesanan() {
               </td>
               <td>
                 <select
-                  className="order-row-status"
+                  className={`order-row-status order-status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}
                   aria-label={`Status pesanan ${order.id}`}
                   value={order.status}
                   onChange={(event) => updateStatus(order.id, event.target.value)}
@@ -552,10 +572,21 @@ export default function KelolaPesanan() {
                   ))}
                 </select>
               </td>
+              <td>
+                <button
+                  type="button"
+                  className="order-delete-button"
+                  onClick={() => deleteOrder(order.id)}
+                  aria-label={`Hapus pesanan ${order.id}`}
+                >
+                  <Trash2 size={17} />
+                  Delete
+                </button>
+              </td>
             </tr>
           )) : (
             <tr>
-              <td className="order-empty" colSpan={4}>
+              <td className="order-empty" colSpan={5}>
                 {orders.length
                   ? "Tidak ada pesanan yang cocok."
                   : "Belum ada pesanan. Klik \u201cTambah Pesanan\u201d untuk mulai mencatat."}
