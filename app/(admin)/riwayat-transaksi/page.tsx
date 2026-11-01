@@ -1,6 +1,5 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
 import Header from "@/components/Header";
 import { StatCard, SearchBox, SecondaryButton, Pills, EmptyTable, Pagination } from "@/components/UI";
 import { CalendarDays, Download, ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -27,163 +26,125 @@ function fmt(d: Date | null) {
 
 /* ─── CalendarPopup ─── */
 interface CalendarPopupProps {
-  anchorRef: React.RefObject<HTMLButtonElement | null>;
+  anchorRef: React.RefObject<HTMLDivElement | null>;
   onClose: () => void;
 }
 
 function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
-  const today  = new Date();
-  const [viewYear,  setViewYear]  = useState(today.getFullYear());
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [start, setStart]   = useState<Date | null>(null);
-  const [end,   setEnd]     = useState<Date | null>(null);
-  const [hover, setHover]   = useState<Date | null>(null);
+  const [start, setStart] = useState<Date | null>(null);
+  const [end, setEnd] = useState<Date | null>(null);
+  const [hover, setHover] = useState<Date | null>(null);
   const [visible, setVisible] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
   /* Click outside → close */
   useEffect(() => {
-    function handler(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        popupRef.current && !popupRef.current.contains(target) &&
-        anchorRef.current && !anchorRef.current.contains(target)
-      ) onClose();
+    function handleOutsideClick(event: MouseEvent) {
+      if (!anchorRef.current?.contains(event.target as Node)) onClose();
     }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [onClose, anchorRef]);
-
-  /* ESC */
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [onClose]);
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [anchorRef, onClose]);
 
   /* Build calendar grid */
-  const firstDay  = new Date(viewYear, viewMonth, 1).getDay();
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const cells: (Date | null)[] = [
     ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => new Date(viewYear, viewMonth, i + 1)),
+    ...Array.from({ length: daysInMonth }, (_, index) => new Date(viewYear, viewMonth, index + 1)),
   ];
-  // pad to full rows
   while (cells.length % 7 !== 0) cells.push(null);
 
-  function handleDayClick(d: Date) {
-    if (!start || (start && end)) {
-      setStart(d); setEnd(null); setHover(null);
+  function changeMonth(offset: number) {
+    const date = new Date(viewYear, viewMonth + offset, 1);
+    setViewYear(date.getFullYear());
+    setViewMonth(date.getMonth());
+  }
+
+  function selectDay(date: Date) {
+    if (!start || end) {
+      setStart(date);
+      setEnd(null);
+      setHover(null);
+    } else if (date < start) {
+      setEnd(start);
+      setStart(date);
     } else {
-      if (d < start) { setEnd(start); setStart(d); }
-      else            { setEnd(d); }
+      setEnd(date);
     }
   }
 
-  function prevMonth() {
-    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); }
-    else setViewMonth(m => m - 1);
-  }
-  function nextMonth() {
-    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); }
-    else setViewMonth(m => m + 1);
-  }
-
-  const presets = [
-    { label: "Hari ini",       action: () => { setStart(today); setEnd(today); } },
-    { label: "7 hari terakhir", action: () => { const d = new Date(today); d.setDate(d.getDate()-6); setStart(d); setEnd(today); } },
-    { label: "30 hari terakhir",action: () => { const d = new Date(today); d.setDate(d.getDate()-29); setStart(d); setEnd(today); } },
-    { label: "Bulan ini",      action: () => { setStart(new Date(today.getFullYear(), today.getMonth(), 1)); setEnd(today); } },
-  ];
-
   const effectiveEnd = end ?? hover;
 
-  const calendarModal = (
-    <div className="history-calendar-overlay">
-      <div
-        ref={popupRef}
-        className={`cal-popup history-calendar-popup${visible ? " cal-popup--open" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Pilih rentang tanggal"
-      >
-      {/* Presets sidebar */}
-      <div className="cal-presets">
-        <p className="cal-presets-title">Pintasan</p>
-        {presets.map(p => (
-          <button key={p.label} type="button" className="cal-preset-btn" onClick={p.action}>
-            {p.label}
-          </button>
-        ))}
-        <hr className="cal-divider" />
-        <button
-          type="button"
-          className="cal-preset-btn cal-preset-reset"
-          onClick={() => { setStart(null); setEnd(null); setHover(null); }}
-        >
-          Reset
-        </button>
-      </div>
-
-      {/* Calendar main */}
+  return (
+    <div
+      ref={popupRef}
+      className={`cal-popup payment-calendar-popup${visible ? " cal-popup--open" : ""}`}
+      role="dialog"
+      aria-label="Pilih rentang tanggal riwayat transaksi"
+    >
       <div className="cal-main">
-        {/* Header nav */}
         <div className="cal-nav">
-          <button type="button" className="cal-nav-btn" onClick={prevMonth} aria-label="Bulan sebelumnya">
+          <button type="button" className="cal-nav-btn" onClick={() => changeMonth(-1)} aria-label="Bulan sebelumnya">
             <ChevronLeft size={16} />
           </button>
           <span className="cal-nav-title">{MONTHS[viewMonth]} {viewYear}</span>
-          <button type="button" className="cal-nav-btn" onClick={nextMonth} aria-label="Bulan berikutnya">
+          <button type="button" className="cal-nav-btn" onClick={() => changeMonth(1)} aria-label="Bulan berikutnya">
             <ChevronRight size={16} />
           </button>
         </div>
 
-        {/* Day-of-week headers */}
         <div className="cal-grid cal-dow-row">
-          {DAYS.map(d => <span key={d} className="cal-dow">{d}</span>)}
+          {DAYS.map((day) => <span key={day} className="cal-dow">{day}</span>)}
         </div>
 
-        {/* Date cells */}
         <div className="cal-grid">
-          {cells.map((d, i) => {
-            if (!d) return <span key={`e-${i}`} className="cal-cell cal-cell--empty" />;
-            const isStart   = start && sameDay(d, start);
-            const isEnd     = end   && sameDay(d, end);
-            const isToday   = sameDay(d, today);
-            const isMid     = inRange(d, start, effectiveEnd);
-            const isHoverEnd= !end && hover && sameDay(d, hover);
+          {cells.map((date, index) => {
+            if (!date) return <span key={`empty-${index}`} className="cal-cell cal-cell--empty" />;
+            const isStart = !!start && sameDay(date, start);
+            const isEnd = !!end && sameDay(date, end);
+            const isToday = sameDay(date, today);
+            const isHoverEnd = !end && !!hover && sameDay(date, hover);
+            const isMid = inRange(date, start, effectiveEnd);
             return (
               <button
-                key={d.toISOString()}
+                key={date.toISOString()}
                 type="button"
                 className={[
                   "cal-cell",
-                  isToday              ? "cal-cell--today"    : "",
-                  isStart              ? "cal-cell--start"    : "",
-                  isEnd || isHoverEnd  ? "cal-cell--end"      : "",
-                  isMid                ? "cal-cell--mid"      : "",
-                  (isStart && (end || hover)) ? "cal-cell--cap-left"  : "",
-                  (isEnd   || isHoverEnd)     ? "cal-cell--cap-right" : "",
+                  isToday ? "cal-cell--today" : "",
+                  isStart ? "cal-cell--start" : "",
+                  isEnd || isHoverEnd ? "cal-cell--end" : "",
+                  isMid ? "cal-cell--mid" : "",
+                  isStart && (end || hover) ? "cal-cell--cap-left" : "",
+                  isEnd || isHoverEnd ? "cal-cell--cap-right" : "",
                 ].filter(Boolean).join(" ")}
-                onClick={() => handleDayClick(d)}
-                onMouseEnter={() => { if (start && !end) setHover(d); }}
+                onClick={() => selectDay(date)}
+                onMouseEnter={() => { if (start && !end) setHover(date); }}
                 onMouseLeave={() => setHover(null)}
-                aria-label={`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`}
-                aria-pressed={!!(isStart || isEnd)}
+                aria-label={`${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`}
+                aria-pressed={isStart || isEnd}
               >
-                <span className="cal-day-num">{d.getDate()}</span>
+                <span className="cal-day-num">{date.getDate()}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Footer: selected range display + apply */}
         <div className="cal-footer">
           <div className="cal-range-display">
             <span className={`cal-range-chip${start ? " cal-range-chip--filled" : ""}`}>
@@ -196,34 +157,81 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
           </div>
           <div className="cal-footer-actions">
             <button type="button" className="cal-btn-cancel" onClick={onClose}>Batal</button>
-            <button
-              type="button"
-              className="cal-btn-apply"
-              disabled={!start}
-              onClick={onClose}
-            >
+            <button type="button" className="cal-btn-apply" disabled={!start} onClick={onClose}>
               Terapkan
             </button>
           </div>
         </div>
       </div>
-
-      {/* Close icon */}
-        <button type="button" className="cal-close" aria-label="Tutup kalender" onClick={onClose}>
-          <X size={14} />
-        </button>
-      </div>
+      <button type="button" className="cal-close" aria-label="Tutup kalender" onClick={onClose}>
+        <X size={14} />
+      </button>
     </div>
   );
-
-  return mounted ? createPortal(calendarModal, document.body) : null;
 }
+
+import { DUMMY_TRANSACTIONS, type DummyTransaction } from "@/lib/dummyData";
+
+function formatRupiah(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+const TX_PILLS = ["Semua", "Menunggu Pembayaran", "Lunas", "Dibatalkan"];
 
 /* ─── PAGE ─── */
 export default function RiwayatTransaksi() {
   const [calOpen, setCalOpen] = useState(false);
-  const calBtnRef = useRef<HTMLButtonElement>(null);
+  const calendarAnchorRef = useRef<HTMLDivElement>(null);
   const closeCalendar = useCallback(() => setCalOpen(false), []);
+  const [search, setSearch] = useState("");
+  const [selectedPill, setSelectedPill] = useState("Semua");
+  const [page, setPage] = useState(1);
+  const perPage = 5;
+
+  const filteredTransactions = DUMMY_TRANSACTIONS.filter((tx) => {
+    const q = search.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      tx.id.toLowerCase().includes(q) ||
+      tx.orderId.toLowerCase().includes(q) ||
+      tx.customer.toLowerCase().includes(q) ||
+      tx.phone.includes(q) ||
+      tx.paymentMethod.toLowerCase().includes(q);
+
+    if (!matchesSearch) return false;
+    if (selectedPill === "Semua") return true;
+    return tx.status.toLowerCase() === selectedPill.toLowerCase();
+  });
+
+  const visibleTransactions = filteredTransactions.slice((page - 1) * perPage, page * perPage);
+
+  function handleDownload() {
+    const headers = ["Tanggal", "No Transaksi", "No Order", "Pelanggan", "Telepon", "Metode", "Total", "Status"];
+    const rows = filteredTransactions.map((t) => [
+      t.date,
+      t.id,
+      t.orderId,
+      t.customer,
+      t.phone,
+      t.paymentMethod,
+      t.total,
+      t.status,
+    ]);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `laporan-transaksi-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   return <>
     <Header title="Riwayat Transaksi" subtitle="Rekap lengkap arus kas, metode pembayaran, dan log transaksi pelanggan."/>
@@ -235,25 +243,33 @@ export default function RiwayatTransaksi() {
       </div>
 
       <div className="toolbar history-toolbar" style={{ position: "relative" }}>
-        <SearchBox placeholder="Cari Riwayat Transaksi, No Pembayaran, Layanan"/>
+        <SearchBox
+          placeholder="Cari Riwayat Transaksi, No Pembayaran, Pelanggan..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
 
-        {/* TANGGAL button — opens calendar */}
-        <SecondaryButton
-          ref={calBtnRef}
-          icon={CalendarDays}
-          onClick={() => setCalOpen(v => !v)}
-          aria-expanded={calOpen}
-          aria-haspopup="dialog"
-        >
-          TANGGAL
+        {/* TANGGAL button & calendar anchor */}
+        <div className="payment-calendar-anchor" ref={calendarAnchorRef}>
+          <SecondaryButton
+            icon={CalendarDays}
+            onClick={() => setCalOpen(v => !v)}
+            aria-expanded={calOpen}
+            aria-haspopup="dialog"
+          >
+            TANGGAL
+          </SecondaryButton>
+          {calOpen && (
+            <CalendarPopup anchorRef={calendarAnchorRef} onClose={closeCalendar} />
+          )}
+        </div>
+
+        <SecondaryButton icon={Download} onClick={handleDownload}>
+          DOWNLOAD
         </SecondaryButton>
-
-        <SecondaryButton icon={Download}>DOWNLOAD</SecondaryButton>
-
-        {/* Calendar popup */}
-        {calOpen && (
-          <CalendarPopup anchorRef={calBtnRef} onClose={closeCalendar} />
-        )}
       </div>
 
       <div className="chart-card">
@@ -297,9 +313,57 @@ export default function RiwayatTransaksi() {
         </div>
       </div>
 
-      <Pills items={["Semua","Menunggu Pembayaran","Lunas","Dibatalkan"]}/>
-      <EmptyTable headers={["TANGGAL","NO. TRANSAKSI","PELANGGAN","METODE PEMBAYARAN","STATUS"]} rows={3}/>
-      <Pagination/>
+      <Pills
+        items={TX_PILLS}
+        active={TX_PILLS.indexOf(selectedPill)}
+        onChange={(index) => {
+          setSelectedPill(TX_PILLS[index]);
+          setPage(1);
+        }}
+      />
+
+      <EmptyTable headers={["TANGGAL","NO. TRANSAKSI","PELANGGAN","METODE PEMBAYARAN","STATUS"]} rows={0}>
+        {visibleTransactions.length > 0 ? (
+          visibleTransactions.map((tx) => (
+            <tr key={tx.id}>
+              <td>
+                <strong>{tx.date.split(",")[0]}</strong>
+                <small>{tx.date.split(",")[1]?.trim() ?? ""}</small>
+              </td>
+              <td>
+                <strong>{tx.id}</strong>
+                <small>Order: {tx.orderId}</small>
+              </td>
+              <td>
+                <strong>{tx.customer}</strong>
+                <small>{tx.phone}</small>
+              </td>
+              <td>
+                <strong>{tx.paymentMethod}</strong>
+                <small>{formatRupiah(tx.total)}</small>
+              </td>
+              <td>
+                <span className={`status ${tx.status.toLowerCase().replaceAll(" ", "-")}`}>
+                  {tx.status}
+                </span>
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
+              Tidak ada data riwayat transaksi yang cocok.
+            </td>
+          </tr>
+        )}
+      </EmptyTable>
+
+      <Pagination
+        total={filteredTransactions.length}
+        perPage={perPage}
+        page={page}
+        onPageChange={setPage}
+      />
     </section>
   </>;
 }

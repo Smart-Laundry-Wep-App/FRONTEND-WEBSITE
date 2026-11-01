@@ -4,15 +4,44 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { authApi } from "@/lib/api";
 
 export default function Login() {
   const [show, setShow] = useState(false);
+  const [identifier, setIdentifier] = useState("admin");
+  const [password, setPassword] = useState("admin123");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    router.push("/dashboard");
+    setError(null);
+    setSuccess(null);
+
+    if (!identifier.trim() || !password) {
+      setError("Email/Username dan Password wajib diisi");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await authApi.login({
+        identifier: identifier.trim(),
+        password,
+      });
+
+      setSuccess(`Login berhasil! Mengalihkan ke dashboard...`);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 600);
+    } catch (err: any) {
+      setError(err?.message || "Gagal masuk. Periksa kembali username dan password Anda.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,27 +77,78 @@ export default function Login() {
           Masukan Akun Anda
         </p>
 
+        {/* ERROR / SUCCESS ALERTS */}
+        {error && (
+          <div
+            role="alert"
+            style={{
+              backgroundColor: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "#991b1b",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              marginBottom: "14px",
+              textAlign: "left",
+              lineHeight: 1.4,
+            }}
+          >
+            ⚠️ {error}
+          </div>
+        )}
+
+        {success && (
+          <div
+            role="status"
+            style={{
+              backgroundColor: "#f0fdf4",
+              border: "1px solid #bbf7d0",
+              color: "#166534",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              marginBottom: "14px",
+              textAlign: "center",
+              fontWeight: 600,
+            }}
+          >
+            ✓ {success}
+          </div>
+        )}
+
         {/* EMAIL / USERNAME */}
-        <label>EMAIL / USERNAME</label>
+        <label htmlFor="login-identifier">EMAIL / USERNAME</label>
 
         <div className="auth-field">
           <Mail size={20} />
 
           <input
+            id="login-identifier"
             type="text"
             placeholder="Masukan Email atau Username"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            disabled={loading}
+            required
+            autoComplete="username"
           />
         </div>
 
         {/* PASSWORD */}
-        <label>PASSWORD</label>
+        <label htmlFor="login-password">PASSWORD</label>
 
         <div className="auth-field">
           <Lock size={20} />
 
           <input
+            id="login-password"
             type={show ? "text" : "password"}
             placeholder="Masukan Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+            required
+            autoComplete="current-password"
           />
 
           <button
@@ -93,13 +173,43 @@ export default function Login() {
           <a href="#">Lupa Password?</a>
         </div>
 
-        {/* LOGIN */}
+        {/* LOGIN SUBMIT */}
         <button
           type="submit"
           className="auth-submit"
+          disabled={loading}
+          style={{
+            opacity: loading ? 0.75 : 1,
+            cursor: loading ? "wait" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
         >
-          MASUK
+          {loading ? (
+            <>
+              <Loader2 size={18} className="spin-infinite" />
+              <span>MEMPROSES...</span>
+            </>
+          ) : (
+            <span>MASUK</span>
+          )}
         </button>
+
+        {/* DEMO INFO BADGE */}
+        <div
+          style={{
+            marginTop: "10px",
+            fontSize: "11px",
+            color: "#64748b",
+            background: "#f1f5f9",
+            padding: "6px 10px",
+            borderRadius: "6px",
+          }}
+        >
+          Testing Default: <strong>admin</strong> / <strong>admin123</strong>
+        </div>
 
         {/* OR */}
         <div className="auth-or">
@@ -129,4 +239,4 @@ export default function Login() {
       </form>
     </main>
   );
-}
+}

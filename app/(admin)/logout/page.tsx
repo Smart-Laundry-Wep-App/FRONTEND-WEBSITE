@@ -81,14 +81,6 @@ export default function Logout() {
 
             <h2>LOG OUT BERHASIL!</h2>
             <p className="logout-subtext">Anda telah keluar dari akun admin. Mengalihkan ke login...</p>
-
-            <button
-              type="button"
-              className="confirm"
-              onClick={() => router.push("/login")}
-            >
-              Ke Halaman Login
-            </button>
           </div>
         )}
       </div>

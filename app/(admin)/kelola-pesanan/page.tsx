@@ -10,6 +10,8 @@ import {
   EmptyTable,
   Pagination,
 } from "@/components/UI";
+import api from "@/lib/api";
+import { DUMMY_ORDERS } from "@/lib/dummyData";
 
 const STORAGE_KEY = "sca-smart-laundry-orders";
 const STATUSES = ["Sedang Cuci", "Pengantaran", "Siap Diambil", "Antaran"];
@@ -101,6 +103,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
         <form className="om-form" onSubmit={onSubmit} noValidate>
 
           {/* Row 1: Nama + Telepon */}
+          {/* Row 1: Nama + Telepon */}
           <div className="om-row">
             <div className="om-field om-field--anim" style={{ "--i": 0 } as React.CSSProperties}>
               <label htmlFor="om-customer">Nama Pelanggan</label>
@@ -113,6 +116,17 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   maxLength={80}
                   placeholder="Nama lengkap pelanggan"
                   autoComplete="off"
+                  onKeyDown={(e) => {
+                    // Tolak input angka 0-9
+                    if (/^[0-9]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onInput={(e) => {
+                    // Tolak/bersihkan angka jika di-paste
+                    const target = e.currentTarget;
+                    target.value = target.value.replace(/[0-9]/g, "");
+                  }}
                 />
               </div>
             </div>
@@ -126,7 +140,33 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   required
                   maxLength={20}
                   type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   placeholder="08xxxxxxxxxx"
+                  onKeyDown={(e) => {
+                    // Izinkan navigasi dan fungsi kontrol
+                    if (
+                      e.key === "Backspace" ||
+                      e.key === "Delete" ||
+                      e.key === "ArrowLeft" ||
+                      e.key === "ArrowRight" ||
+                      e.key === "Tab" ||
+                      e.key === "Enter" ||
+                      e.ctrlKey ||
+                      e.metaKey
+                    ) {
+                      return;
+                    }
+                    // Tolak huruf dan karakter selain angka
+                    if (!/^[0-9]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onInput={(e) => {
+                    // Hapus karakter huruf atau simbol
+                    const target = e.currentTarget;
+                    target.value = target.value.replace(/[^0-9]/g, "");
+                  }}
                 />
               </div>
             </div>
@@ -144,6 +184,17 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   required
                   maxLength={80}
                   placeholder="Contoh: Cuci Kering Setrika"
+                  onKeyDown={(e) => {
+                    // Tolak input angka
+                    if (/^[0-9]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onInput={(e) => {
+                    // Tolak/bersihkan angka jika di-paste
+                    const target = e.currentTarget;
+                    target.value = target.value.replace(/[0-9]/g, "");
+                  }}
                 />
               </div>
             </div>
@@ -170,10 +221,13 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   name="weight"
                   required
                   type="number"
-                  min="0.1"
-                  step="0.1"
+                  min="1"
+                  step="0.5"
                   value={weight}
-                  onChange={(e) => setWeight(Math.max(0.1, Number(e.target.value)))}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setWeight(isNaN(val) ? 1 : Math.max(1, val));
+                  }}
                 />
                 <span className="om-input-suffix">kg</span>
               </div>
@@ -242,21 +296,56 @@ export default function KelolaPesanan() {
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
-    try {
-      const savedOrders = window.localStorage.getItem(STORAGE_KEY);
-      if (savedOrders) {
-        const parsed: unknown = JSON.parse(savedOrders);
-        if (!Array.isArray(parsed) || !parsed.every(isLaundryOrder)) {
-          throw new Error("Format data pesanan tidak valid.");
+    let isMounted = true;
+    async function loadInitialOrders() {
+      try {
+        const response = await api.get("/orders");
+        if (response?.data?.orders && Array.isArray(response.data.orders) && response.data.orders.length > 0) {
+          if (isMounted) {
+            setOrders(response.data.orders);
+            setIsLoaded(true);
+            return;
+          }
         }
-        setOrders(parsed);
+      } catch {
+        // Fallback to localStorage jika backend offline
       }
-    } catch (error) {
-      console.error("Gagal membaca data pesanan:", error);
-      setStorageError("Data pesanan tidak dapat dibaca dari browser.");
-    } finally {
-      setIsLoaded(true);
+
+      try {
+        const savedOrders = window.localStorage.getItem(STORAGE_KEY);
+        if (savedOrders && isMounted) {
+          const parsed: unknown = JSON.parse(savedOrders);
+          if (Array.isArray(parsed) && parsed.every(isLaundryOrder) && parsed.length > 0) {
+            setOrders(parsed);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Gagal membaca data pesanan:", error);
+        if (isMounted) setStorageError("Data pesanan tidak dapat dibaca dari browser.");
+      }
+
+      // Fallback: gunakan data dummy jika backend & localStorage kosong
+      if (isMounted) {
+        const dummyOrders = DUMMY_ORDERS.map((o) => ({
+          id: o.id,
+          customer: o.customer,
+          phone: o.phone,
+          service: o.service,
+          weight: o.weight,
+          pricePerKg: o.pricePerKg,
+          status: (o.status === "Pengeringan" || o.status === "Selesai" ? "Sedang Cuci" : o.status) as string,
+          createdAt: o.createdAt,
+        }));
+        setOrders(dummyOrders as any);
+        setIsLoaded(true);
+      }
     }
+
+    loadInitialOrders();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -292,11 +381,12 @@ export default function KelolaPesanan() {
     setPage(1);
   }
 
-  function addOrder(event: FormEvent<HTMLFormElement>) {
+  async function addOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const customer = String(formData.get("customer") ?? "").trim();
     const phone = String(formData.get("phone") ?? "").trim();
     const service = String(formData.get("service") ?? "").trim();
@@ -308,8 +398,41 @@ export default function KelolaPesanan() {
       setFormError("Lengkapi semua data pesanan dengan benar.");
       return;
     }
-    if (!Number.isFinite(weight) || weight <= 0 || !Number.isFinite(pricePerKg) || pricePerKg <= 0) {
-      setFormError("Berat dan tarif harus lebih besar dari 0.");
+
+    // 1. Validasi Berat: di bawah 1 tidak bisa
+    if (!Number.isFinite(weight) || weight < 1) {
+      setFormError("Berat cucian tidak boleh di bawah 1 kg (minimal 1 kg).");
+      return;
+    }
+
+    // 2. Validasi Nomor Telepon: huruf tolak, harus angka
+    if (/[a-zA-Z]/.test(phone)) {
+      setFormError("Nomor telepon tidak boleh mengandung huruf (hanya angka).");
+      return;
+    }
+    if (!/^[0-9]+$/.test(phone.replace(/[\s\-+]/g, ""))) {
+      setFormError("Nomor telepon hanya boleh berisi format angka yang valid.");
+      return;
+    }
+
+    // 3. Validasi Nama: wajib huruf, angka tolak
+    if (/[0-9]/.test(customer)) {
+      setFormError("Nama pelanggan wajib berupa huruf (angka ditolak).");
+      return;
+    }
+    if (!/^[a-zA-Z\s'.\-]+$/.test(customer)) {
+      setFormError("Nama pelanggan hanya boleh berisi huruf dan tanda baca nama.");
+      return;
+    }
+
+    // 4. Validasi Jenis Layanan: tidak boleh angka
+    if (/[0-9]/.test(service)) {
+      setFormError("Jenis layanan tidak boleh mengandung angka.");
+      return;
+    }
+
+    if (!Number.isFinite(pricePerKg) || pricePerKg <= 0) {
+      setFormError("Tarif per kg harus lebih besar dari 0.");
       return;
     }
 
@@ -324,12 +447,34 @@ export default function KelolaPesanan() {
       createdAt: new Date().toISOString(),
     };
 
+    // Kirim ke backend validator API
+    try {
+      const response = await api.post("/orders", {
+        customer,
+        phone,
+        service,
+        weight,
+        pricePerKg,
+        status,
+      });
+      if (response?.data?.id) {
+        newOrder.id = response.data.id;
+      }
+    } catch (apiErr: any) {
+      // Jika server backend merespon penolakan validasi (400 Bad Request)
+      if (apiErr?.status === 400 || apiErr?.data?.success === false) {
+        setFormError(apiErr?.data?.message || apiErr.message || "Validasi data gagal.");
+        return;
+      }
+      console.warn("Backend API sync notice:", apiErr?.message);
+    }
+
     setOrders((current) => [newOrder, ...current]);
     setSearch("");
     setStatusFilter("Semua");
     setPage(1);
     setIsFormOpen(false);
-    event.currentTarget.reset();
+    form.reset();
   }
 
   function updateStatus(id: string, status: string) {
@@ -355,18 +500,6 @@ export default function KelolaPesanan() {
               setPage(1);
             }}
           />
-
-          <select
-            className="order-status-select"
-            aria-label="Filter status pesanan"
-            value={statusFilter}
-            onChange={(event) => selectStatus(event.target.value)}
-          >
-            <option value="Semua">Semua Status</option>
-            {STATUSES.map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
 
           <PrimaryButton type="button" onClick={() => {
             setFormError("");
