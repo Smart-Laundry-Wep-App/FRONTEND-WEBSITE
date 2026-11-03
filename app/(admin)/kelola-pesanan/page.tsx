@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef, type FormEvent } from "react";
-import { X, User, Phone, WashingMachine, Scale, Coins, CheckCircle2, AlertCircle, Check, ClipboardList, ChevronDown, Trash2 } from "lucide-react";
+import { X, User, Phone, WashingMachine, Scale, Coins, AlertCircle, ClipboardList, ChevronDown, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import {
   SearchBox,
@@ -300,7 +300,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
             <div className="om-field om-field--anim" style={{ "--i": 3 } as React.CSSProperties}>
               <label htmlFor="om-status">Status Pesanan</label>
               <div className="om-input-wrap om-select-wrap">
-                <span className="om-input-icon"><CheckCircle2 size={16} /></span>
+                <span className="om-input-icon"><ClipboardList size={16} /></span>
                 <select id="om-status" name="status" defaultValue="Sedang Cuci">
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -376,7 +376,6 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
               Batal
             </button>
             <button type="submit" className="om-btn-submit">
-              <Check size={18} />
               Simpan Pesanan
             </button>
           </div>

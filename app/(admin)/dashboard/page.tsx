@@ -24,6 +24,16 @@ function formatRupiah(amount: number) {
   }).format(amount);
 }
 
+function matchesOrderFilter(order: DummyOrder, filter: string) {
+  if (filter === "Pengeringan") {
+    return order.status === "Sedang Cuci" || order.service.toLowerCase().includes("kering");
+  }
+  if (filter === "Pengantaran") {
+    return order.status === "Pengantaran" || order.status === "Antaran";
+  }
+  return order.status.toLowerCase() === filter.toLowerCase();
+}
+
 export default function Dashboard() {
   const [selectedFilter, setSelectedFilter] = useState("Semua");
   const [page, setPage] = useState(1);
@@ -31,15 +41,16 @@ export default function Dashboard() {
 
   const filteredOrders = useMemo(() => {
     if (selectedFilter === "Semua") return DUMMY_ORDERS;
-    return DUMMY_ORDERS.filter((order) => {
-      if (selectedFilter === "Pengeringan") {
-        return order.status === "Sedang Cuci" || order.service.toLowerCase().includes("kering");
-      }
-      return order.status.toLowerCase() === selectedFilter.toLowerCase();
-    });
+    return DUMMY_ORDERS.filter((order) => matchesOrderFilter(order, selectedFilter));
   }, [selectedFilter]);
 
-  const totalPages = Math.ceil(filteredOrders.length / perPage) || 1;
+  const pillItems = PILL_OPTIONS.map((filter) => {
+    const count = filter === "Semua"
+      ? DUMMY_ORDERS.length
+      : DUMMY_ORDERS.filter((order) => matchesOrderFilter(order, filter)).length;
+    return `${filter} (${count})`;
+  });
+
   const currentOrders = filteredOrders.slice((page - 1) * perPage, page * perPage);
 
   return (
@@ -100,7 +111,7 @@ export default function Dashboard() {
         </div>
 
         <Pills
-          items={PILL_OPTIONS}
+          items={pillItems}
           active={PILL_OPTIONS.indexOf(selectedFilter)}
           onChange={(index) => {
             setSelectedFilter(PILL_OPTIONS[index]);
@@ -161,13 +172,6 @@ export default function Dashboard() {
             )}
           </EmptyTable>
         </div>
-
-        <Pagination
-          total={filteredOrders.length}
-          perPage={perPage}
-          page={page}
-          onPageChange={setPage}
-        />
       </section>
     </>
   );

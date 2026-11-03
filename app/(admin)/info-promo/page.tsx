@@ -10,7 +10,7 @@ import {
   EmptyTable,
   Pagination,
 } from "@/components/UI";
-import { FileDown, Plus, X, Megaphone, Check, AlertCircle } from "lucide-react";
+import { FileDown, Plus, X, Megaphone, AlertCircle } from "lucide-react";
 import { DUMMY_PROMOS, type DummyPromo } from "@/lib/dummyData";
 
 const PROMO_PILLS = ["Semua", "Aktif", "Non Aktif"];
@@ -67,7 +67,7 @@ function PromoModal({ onClose, onSubmit, existingCodes }: PromoModalProps) {
     <div className="promo-modal-overlay" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
     }}>
-      <section className="promo-modal" role="dialog" aria-modal="true" aria-labelledby="promo-modal-title">
+      <section className="promo-modal promo-card-modal" role="dialog" aria-modal="true" aria-labelledby="promo-modal-title">
         <header className="promo-modal-header">
           <div className="promo-modal-icon"><Megaphone size={22} /></div>
           <div>
@@ -122,7 +122,7 @@ function PromoModal({ onClose, onSubmit, existingCodes }: PromoModalProps) {
           </label>
           <div className="promo-modal-actions">
             <button type="button" className="promo-modal-cancel" onClick={onClose}>Batal</button>
-            <button type="submit" className="promo-modal-submit"><Check size={18} />Simpan Promo</button>
+            <button type="submit" className="promo-modal-submit">Simpan Promo</button>
           </div>
         </form>
       </section>
@@ -207,6 +207,13 @@ export default function InfoPromo() {
     setIsPromoModalOpen(false);
   }
 
+  const promoPillItems = PROMO_PILLS.map((filter) => {
+    const count = filter === "Semua"
+      ? promos.length
+      : promos.filter((promo) => promo.status === filter).length;
+    return `${filter} (${count})`;
+  });
+
   return (
     <>
       <Header
@@ -261,7 +268,7 @@ export default function InfoPromo() {
 
         {/* FILTER */}
         <Pills
-          items={PROMO_PILLS}
+          items={promoPillItems}
           active={PROMO_PILLS.indexOf(selectedPill)}
           onChange={(index) => {
             setSelectedPill(PROMO_PILLS[index]);
