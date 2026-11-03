@@ -46,7 +46,7 @@ export default function Login() {
 
   return (
     <main className="auth-page">
-      <form className="auth-card" onSubmit={handleSubmit}>
+      <form className="auth-card login-card" onSubmit={handleSubmit}>
 
         {/* LOGO SCA SMART LAUNDRY */}
         <Image
@@ -217,7 +217,7 @@ export default function Login() {
         </div>
 
         {/* SOCIAL LOGIN */}
-        <div className="social-row">
+        <div className="social-row login-social-row">
           <button type="button">
             <svg className="social-icon google-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.5 5.5 0 0 1-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09Z" />
@@ -226,13 +226,6 @@ export default function Login() {
               <path fill="#EA4335" d="M12 4.36c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.09 14.97 0 12 0a11 11 0 0 0-9.85 7.06l3.69 2.84C6.71 7.29 9.14 4.36 12 4.36Z" />
             </svg>
             Google
-          </button>
-
-          <button type="button">
-            <svg className="social-icon facebook-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill="currentColor" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.98h-1.513c-1.49 0-1.956.93-1.956 1.886v2.255h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z" />
-            </svg>
-            Facebook
           </button>
         </div>
 

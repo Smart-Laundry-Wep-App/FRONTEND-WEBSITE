@@ -55,7 +55,10 @@ export default function Header({ title, subtitle, hide = false }: HeaderProps) {
             <span className="header-notification-badge">{notificationCount}</span>
           )}
         </Link>
-        <span><CircleUserRound size={28} strokeWidth={1.9} />Admin Laundry</span>
+        <Link href="/profil-admin" className="header-profile-link">
+          <CircleUserRound size={28} strokeWidth={1.9} />
+          Admin Laundry
+        </Link>
       </div>
     </header>
   );

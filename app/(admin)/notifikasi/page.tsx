@@ -26,11 +26,8 @@ export default function Notifikasi() {
 
   const filtered = notifications.filter((item) => {
     const q = search.trim().toLowerCase();
-    return (
-      !q ||
-      item.title.toLowerCase().includes(q) ||
-      item.message.toLowerCase().includes(q) ||
-      item.status.toLowerCase().includes(q)
+    return !q || Object.values(item).some((value) =>
+      String(value).toLowerCase().includes(q),
     );
   });
 

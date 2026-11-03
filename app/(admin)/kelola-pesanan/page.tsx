@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef, type FormEvent } from "react";
-import { X, User, Phone, WashingMachine, Scale, Coins, CheckCircle2, AlertCircle, Plus, ClipboardList, ChevronDown } from "lucide-react";
+import { X, User, Phone, WashingMachine, Scale, Coins, CheckCircle2, AlertCircle, Check, ClipboardList, ChevronDown, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import {
   SearchBox,
@@ -14,7 +14,7 @@ import api from "@/lib/api";
 import { DUMMY_ORDERS } from "@/lib/dummyData";
 
 const STORAGE_KEY = "sca-smart-laundry-orders";
-const STATUSES = ["Sedang Cuci", "Pengantaran", "Siap Diambil", "Antaran"];
+const STATUSES = ["Sedang Cuci", "Pengantaran", "Siap Diambil", "Selesai"];
 const ITEMS_PER_PAGE = 5;
 
 interface LaundryOrder {
@@ -51,6 +51,62 @@ function formatRupiah(amount: number) {
   }).format(amount);
 }
 
+function getStatusClassName(status: string) {
+  switch (status) {
+    case "Sedang Cuci":
+      return "order-row-status--washing";
+    case "Siap Diambil":
+      return "order-row-status--ready";
+    case "Pengantaran":
+      return "order-row-status--delivery";
+    case "Selesai":
+      return "order-row-status--delivered";
+    default:
+      return "order-row-status--unknown";
+  }
+}
+
+function normalizeOrderStatus(status: string) {
+  if (status === "Antaran") return "Selesai";
+  if (status === "Pengeringan") return "Sedang Cuci";
+  return status;
+}
+
+type AddOrderField = "customer" | "phone" | "service" | "weight" | "pricePerKg";
+
+function getAddOrderFieldError(field: AddOrderField, value: string) {
+  const trimmedValue = value.trim();
+  switch (field) {
+    case "customer":
+      if (!trimmedValue) return "Nama pelanggan wajib diisi.";
+      if (/[0-9]/.test(trimmedValue)) return "Nama pelanggan wajib diisi dengan huruf, bukan angka.";
+      if (!/^[a-zA-Z\s'.\-]+$/.test(trimmedValue)) return "Masukkan nama pelanggan dengan huruf yang valid.";
+      return "";
+    case "phone":
+      if (!trimmedValue) return "Nomor telepon wajib diisi.";
+      if (/[a-zA-Z]/.test(trimmedValue)) return "Nomor telepon wajib diisi dengan angka, bukan huruf.";
+      if (!/^[0-9]+$/.test(trimmedValue)) return "Nomor telepon hanya boleh berisi angka.";
+      return "";
+    case "service":
+      if (!trimmedValue) return "Jenis layanan wajib diisi.";
+      if (/[0-9]/.test(trimmedValue)) return "Jenis layanan wajib diisi dengan nama layanan, bukan nomor.";
+      return "";
+    case "weight": {
+      const weight = Number(value);
+      if (!Number.isFinite(weight) || weight < 1) return "Berat minimal 1 kg.";
+      if (Math.abs(weight * 10 - Math.round(weight * 10)) > 1e-8) {
+        return "Berat hanya dapat menggunakan satu angka desimal.";
+      }
+      return "";
+    }
+    case "pricePerKg":
+      if (!Number.isFinite(Number(value)) || Number(value) <= 0) {
+        return "Tarif per kg harus lebih besar dari 0.";
+      }
+      return "";
+  }
+}
+
 /* ─── ADD ORDER MODAL ─── */
 interface AddOrderModalProps {
   onClose: () => void;
@@ -60,9 +116,10 @@ interface AddOrderModalProps {
 
 function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const [weight, setWeight] = useState(1);
+  const [weight, setWeight] = useState("1");
   const [price, setPrice] = useState(9500);
   const [visible, setVisible] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<AddOrderField, string>>>({});
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
@@ -71,7 +128,27 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const total = weight * price;
+  const weightValue = Number(weight) || 0;
+  const total = weightValue * price;
+
+  function validateField(field: AddOrderField, value: string) {
+    setFieldErrors((current) => ({ ...current, [field]: getAddOrderFieldError(field, value) }));
+  }
+
+  function handleFormSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const errors: Partial<Record<AddOrderField, string>> = {
+      customer: getAddOrderFieldError("customer", String(formData.get("customer") ?? "")),
+      phone: getAddOrderFieldError("phone", String(formData.get("phone") ?? "")),
+      service: getAddOrderFieldError("service", String(formData.get("service") ?? "")),
+      weight: getAddOrderFieldError("weight", String(formData.get("weight") ?? "")),
+      pricePerKg: getAddOrderFieldError("pricePerKg", String(formData.get("pricePerKg") ?? "")),
+    };
+    setFieldErrors(errors);
+    if (Object.values(errors).some(Boolean)) return;
+    onSubmit(event);
+  }
 
   return (
     <div
@@ -100,7 +177,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
         </div>
 
         {/* ── Form ── */}
-        <form className="om-form" onSubmit={onSubmit} noValidate>
+        <form className="om-form" onSubmit={handleFormSubmit} noValidate>
 
           {/* Row 1: Nama + Telepon */}
           {/* Row 1: Nama + Telepon */}
@@ -116,19 +193,29 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   maxLength={80}
                   placeholder="Nama lengkap pelanggan"
                   autoComplete="off"
+                  onChange={(e) => validateField("customer", e.currentTarget.value)}
+                  onBlur={(e) => validateField("customer", e.currentTarget.value)}
                   onKeyDown={(e) => {
-                    // Tolak input angka 0-9
                     if (/^[0-9]$/.test(e.key)) {
                       e.preventDefault();
+                      setFieldErrors((current) => ({
+                        ...current,
+                        customer: "Nama pelanggan wajib diisi dengan huruf, bukan angka.",
+                      }));
                     }
                   }}
-                  onInput={(e) => {
-                    // Tolak/bersihkan angka jika di-paste
-                    const target = e.currentTarget;
-                    target.value = target.value.replace(/[0-9]/g, "");
+                  onPaste={(e) => {
+                    if (/[0-9]/.test(e.clipboardData.getData("text"))) {
+                      e.preventDefault();
+                      setFieldErrors((current) => ({
+                        ...current,
+                        customer: "Nama pelanggan wajib diisi dengan huruf, bukan angka.",
+                      }));
+                    }
                   }}
                 />
               </div>
+              {fieldErrors.customer && <small className="om-field-error">{fieldErrors.customer}</small>}
             </div>
             <div className="om-field om-field--anim" style={{ "--i": 1 } as React.CSSProperties}>
               <label htmlFor="om-phone">Nomor Telepon</label>
@@ -143,32 +230,34 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   placeholder="08xxxxxxxxxx"
+                  onChange={(e) => validateField("phone", e.currentTarget.value)}
+                  onBlur={(e) => validateField("phone", e.currentTarget.value)}
                   onKeyDown={(e) => {
-                    // Izinkan navigasi dan fungsi kontrol
                     if (
-                      e.key === "Backspace" ||
-                      e.key === "Delete" ||
-                      e.key === "ArrowLeft" ||
-                      e.key === "ArrowRight" ||
-                      e.key === "Tab" ||
-                      e.key === "Enter" ||
-                      e.ctrlKey ||
-                      e.metaKey
+                      e.key.length === 1 &&
+                      !/^[0-9]$/.test(e.key) &&
+                      !e.ctrlKey &&
+                      !e.metaKey
                     ) {
-                      return;
-                    }
-                    // Tolak huruf dan karakter selain angka
-                    if (!/^[0-9]$/.test(e.key)) {
                       e.preventDefault();
+                      setFieldErrors((current) => ({
+                        ...current,
+                        phone: "Nomor telepon wajib diisi dengan angka, bukan huruf.",
+                      }));
                     }
                   }}
-                  onInput={(e) => {
-                    // Hapus karakter huruf atau simbol
-                    const target = e.currentTarget;
-                    target.value = target.value.replace(/[^0-9]/g, "");
+                  onPaste={(e) => {
+                    if (!/^[0-9]+$/.test(e.clipboardData.getData("text"))) {
+                      e.preventDefault();
+                      setFieldErrors((current) => ({
+                        ...current,
+                        phone: "Nomor telepon wajib diisi dengan angka, bukan huruf.",
+                      }));
+                    }
                   }}
                 />
               </div>
+              {fieldErrors.phone && <small className="om-field-error">{fieldErrors.phone}</small>}
             </div>
           </div>
 
@@ -184,19 +273,29 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   required
                   maxLength={80}
                   placeholder="Contoh: Cuci Kering Setrika"
+                  onChange={(e) => validateField("service", e.currentTarget.value)}
+                  onBlur={(e) => validateField("service", e.currentTarget.value)}
                   onKeyDown={(e) => {
-                    // Tolak input angka
                     if (/^[0-9]$/.test(e.key)) {
                       e.preventDefault();
+                      setFieldErrors((current) => ({
+                        ...current,
+                        service: "Jenis layanan wajib diisi dengan nama layanan, bukan angka.",
+                      }));
                     }
                   }}
-                  onInput={(e) => {
-                    // Tolak/bersihkan angka jika di-paste
-                    const target = e.currentTarget;
-                    target.value = target.value.replace(/[0-9]/g, "");
+                  onPaste={(e) => {
+                    if (/[0-9]/.test(e.clipboardData.getData("text"))) {
+                      e.preventDefault();
+                      setFieldErrors((current) => ({
+                        ...current,
+                        service: "Jenis layanan wajib diisi dengan nama layanan, bukan angka.",
+                      }));
+                    }
                   }}
                 />
               </div>
+              {fieldErrors.service && <small className="om-field-error">{fieldErrors.service}</small>}
             </div>
             <div className="om-field om-field--anim" style={{ "--i": 3 } as React.CSSProperties}>
               <label htmlFor="om-status">Status Pesanan</label>
@@ -222,15 +321,15 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   required
                   type="number"
                   min="1"
-                  step="1"
+                  step="0.1"
+                  placeholder="1"
                   value={weight}
-                  onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    setWeight(isNaN(val) ? 1 : Math.max(1, val));
-                  }}
+                  onBlur={(e) => validateField("weight", e.currentTarget.value)}
+                  onChange={(e) => setWeight(e.target.value)}
                 />
                 <span className="om-input-suffix">kg</span>
               </div>
+              {fieldErrors.weight && <small className="om-field-error">{fieldErrors.weight}</small>}
             </div>
             <div className="om-field om-field--anim" style={{ "--i": 5 } as React.CSSProperties}>
               <label htmlFor="om-price">Tarif per kg</label>
@@ -243,11 +342,14 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   type="number"
                   min="1"
                   step="500"
+                  placeholder="9500"
                   value={price}
+                  onBlur={(e) => validateField("pricePerKg", e.currentTarget.value)}
                   onChange={(e) => setPrice(Math.max(1, Number(e.target.value)))}
                 />
                 <span className="om-input-suffix">/ kg</span>
               </div>
+              {fieldErrors.pricePerKg && <small className="om-field-error">{fieldErrors.pricePerKg}</small>}
             </div>
           </div>
 
@@ -255,7 +357,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
           <div className="om-total om-field--anim" style={{ "--i": 6 } as React.CSSProperties}>
             <div className="om-total-label">
               <span>Estimasi Total</span>
-              <span className="om-total-formula">{weight} kg × {formatRupiah(price)}</span>
+              <span className="om-total-formula">{weightValue.toLocaleString("id-ID", { maximumFractionDigits: 1 })} kg × {formatRupiah(price)}</span>
             </div>
             <div className="om-total-value">{formatRupiah(total)}</div>
           </div>
@@ -274,7 +376,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
               Batal
             </button>
             <button type="submit" className="om-btn-submit">
-              <Plus size={18} />
+              <Check size={18} />
               Simpan Pesanan
             </button>
           </div>
@@ -292,6 +394,7 @@ export default function KelolaPesanan() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [page, setPage] = useState(1);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [storageError, setStorageError] = useState("");
   const [formError, setFormError] = useState("");
 
@@ -302,7 +405,10 @@ export default function KelolaPesanan() {
         const response = await api.get("/orders");
         if (response?.data?.orders && Array.isArray(response.data.orders) && response.data.orders.length > 0) {
           if (isMounted) {
-            setOrders(response.data.orders);
+            setOrders(response.data.orders.map((order: LaundryOrder) => ({
+              ...order,
+              status: normalizeOrderStatus(order.status),
+            })));
             setIsLoaded(true);
             return;
           }
@@ -315,8 +421,12 @@ export default function KelolaPesanan() {
         const savedOrders = window.localStorage.getItem(STORAGE_KEY);
         if (savedOrders && isMounted) {
           const parsed: unknown = JSON.parse(savedOrders);
-          if (Array.isArray(parsed) && parsed.every(isLaundryOrder) && parsed.length > 0) {
-            setOrders(parsed);
+          if (Array.isArray(parsed) && parsed.every(isLaundryOrder)) {
+            setOrders(parsed.map((order) => ({
+              ...order,
+              status: normalizeOrderStatus(order.status),
+            })));
+            setIsLoaded(true);
             return;
           }
         }
@@ -334,7 +444,7 @@ export default function KelolaPesanan() {
           service: o.service,
           weight: o.weight,
           pricePerKg: o.pricePerKg,
-          status: (o.status === "Pengeringan" || o.status === "Selesai" ? "Sedang Cuci" : o.status) as string,
+          status: normalizeOrderStatus(o.status),
           createdAt: o.createdAt,
         }));
         setOrders(dummyOrders as any);
@@ -363,8 +473,8 @@ export default function KelolaPesanan() {
     return orders.filter((order) => {
       const matchesSearch =
         !query ||
-        [order.id, order.customer, order.phone, order.service].some((value) =>
-          value.toLowerCase().includes(query),
+        Object.values(order).some((value) =>
+          String(value).toLowerCase().includes(query),
         );
       const matchesStatus = statusFilter === "Semua" || order.status === statusFilter;
       return matchesSearch && matchesStatus;
@@ -378,6 +488,7 @@ export default function KelolaPesanan() {
 
   function selectStatus(status: string) {
     setStatusFilter(status);
+    setSelectedOrderId(null);
     setPage(1);
   }
 
@@ -399,9 +510,13 @@ export default function KelolaPesanan() {
       return;
     }
 
-    // 1. Validasi Berat: di bawah 1 tidak bisa
-    if (!Number.isFinite(weight) || !Number.isInteger(weight) || weight < 1) {
-      setFormError("Berat cucian harus berupa angka bulat minimal 1 kg.");
+    // Validasi berat: minimal 1 kg dengan kelipatan 0,1 kg.
+    if (
+      !Number.isFinite(weight) ||
+      weight < 1 ||
+      Math.abs(weight * 10 - Math.round(weight * 10)) > 1e-8
+    ) {
+      setFormError("Berat cucian minimal 1 kg dan hanya boleh menggunakan satu angka desimal.");
       return;
     }
 
@@ -483,6 +598,36 @@ export default function KelolaPesanan() {
     );
   }
 
+  function deleteSelectedOrder() {
+    if (!selectedOrderId) {
+      window.alert("Pilih baris pesanan yang ingin dihapus terlebih dahulu.");
+      return;
+    }
+    const orderToDelete = orders.find((order) => order.id === selectedOrderId);
+    if (!orderToDelete) {
+      setSelectedOrderId(null);
+      return;
+    }
+    if (!window.confirm(`Hapus pesanan ${orderToDelete.id}? Tindakan ini tidak dapat dibatalkan.`)) return;
+
+    const remainingFilteredCount = filteredOrders.filter((order) => order.id !== selectedOrderId).length;
+    setOrders((current) => current.filter((order) => order.id !== selectedOrderId));
+    setSelectedOrderId(null);
+    setPage((currentPage) =>
+      Math.min(currentPage, Math.max(1, Math.ceil(remainingFilteredCount / ITEMS_PER_PAGE))),
+    );
+  }
+
+  function selectOrderFromRow(event: React.MouseEvent<HTMLTableRowElement>, id: string) {
+    const target = event.target as HTMLElement;
+    if (target.closest("select")) {
+      setSelectedOrderId(id);
+      return;
+    }
+    if (target.closest("button, a, input")) return;
+    setSelectedOrderId((current) => current === id ? null : id);
+  }
+
   return (
     <>
       <Header
@@ -497,6 +642,7 @@ export default function KelolaPesanan() {
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
+              setSelectedOrderId(null);
               setPage(1);
             }}
           />
@@ -511,23 +657,47 @@ export default function KelolaPesanan() {
 
         {storageError && <p className="order-error" role="alert">{storageError}</p>}
 
-        <Pills
-          items={[
-            `Semua (${orders.length})`,
-            ...STATUSES.map(
-              (status) => `${status} (${orders.filter((order) => order.status === status).length})`,
-            ),
-          ]}
-          active={Math.max(0, STATUSES.indexOf(statusFilter) + 1)}
-          onChange={(index) => selectStatus(index === 0 ? "Semua" : STATUSES[index - 1])}
-        />
+        <div className="orders-filter-row">
+          <Pills
+            items={[
+              `Semua (${orders.length})`,
+              ...STATUSES.map(
+                (status) => `${status} (${orders.filter((order) => order.status === status).length})`,
+              ),
+            ]}
+            active={Math.max(0, STATUSES.indexOf(statusFilter) + 1)}
+            onChange={(index) => selectStatus(index === 0 ? "Semua" : STATUSES[index - 1])}
+          />
+          <button
+            type="button"
+            className="order-delete-button order-delete-selected"
+            disabled={orders.length === 0}
+            onClick={deleteSelectedOrder}
+          >
+            <Trash2 size={16} />
+            Delete
+          </button>
+        </div>
 
         <EmptyTable
           headers={["ID PELANGGAN", "PELANGGAN", "LAYANAN STATUS", "STATUS"]}
           rows={0}
         >
           {visibleOrders.length ? visibleOrders.map((order) => (
-            <tr key={order.id}>
+            <tr
+              key={order.id}
+              className={selectedOrderId === order.id ? "order-row-selected" : ""}
+              aria-selected={selectedOrderId === order.id}
+              tabIndex={0}
+              onClick={(event) => selectOrderFromRow(event, order.id)}
+              onKeyDown={(event) => {
+                if ((event.target as HTMLElement).closest("select, button, a, input")) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedOrderId((current) => current === order.id ? null : order.id);
+                }
+              }}
+            >
               <td>
                 <strong>{order.id}</strong>
                 <small>{new Date(order.createdAt).toLocaleDateString("id-ID")}</small>
@@ -542,7 +712,7 @@ export default function KelolaPesanan() {
               </td>
               <td>
                 <select
-                  className="order-row-status"
+                  className={`order-row-status ${getStatusClassName(order.status)}`}
                   aria-label={`Status pesanan ${order.id}`}
                   value={order.status}
                   onChange={(event) => updateStatus(order.id, event.target.value)}
