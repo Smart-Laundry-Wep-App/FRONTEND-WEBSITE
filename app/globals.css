@@ -3188,7 +3188,6 @@ thead tr {
   place-items: center;
   color: #fff;
   flex: none;
-  animation: float 3.5s ease-in-out infinite;
 }
 
 .om-header-copy {
