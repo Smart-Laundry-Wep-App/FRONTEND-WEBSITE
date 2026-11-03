@@ -3228,7 +3228,7 @@ thead tr {
 
 .om-close:hover {
   background: rgba(255, 255, 255, 0.28);
-  transform: scale(1.1) rotate(90deg);
+  transform: scale(1.1);
 }
 
 /* ── Form body ── */
