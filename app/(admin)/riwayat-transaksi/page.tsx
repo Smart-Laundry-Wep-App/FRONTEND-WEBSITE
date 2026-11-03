@@ -194,13 +194,9 @@ export default function RiwayatTransaksi() {
 
   const filteredTransactions = DUMMY_TRANSACTIONS.filter((tx) => {
     const q = search.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      tx.id.toLowerCase().includes(q) ||
-      tx.orderId.toLowerCase().includes(q) ||
-      tx.customer.toLowerCase().includes(q) ||
-      tx.phone.includes(q) ||
-      tx.paymentMethod.toLowerCase().includes(q);
+    const matchesSearch = !q || Object.values(tx).some((value) =>
+      String(value ?? "").toLowerCase().includes(q),
+    );
 
     if (!matchesSearch) return false;
     if (selectedPill === "Semua") return true;

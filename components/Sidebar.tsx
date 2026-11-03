@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard, WashingMachine, WalletCards, HandCoins, Percent,
-  ChartNoAxesCombined, Bell, UserRound, LogOut,
+  ChartNoAxesCombined, Bell, LogOut,
 } from "lucide-react";
 
 interface NavItem { href: string; label: string; icon: LucideIcon }
@@ -19,7 +19,6 @@ const items: NavItem[] = [
   { href: "/info-promo", label: "Info Promo", icon: Percent },
   { href: "/layanan-harga", label: "Layanan dan Harga", icon: ChartNoAxesCombined },
   { href: "/notifikasi", label: "Notifikasi", icon: Bell },
-  { href: "/profil-admin", label: "Profil Admin", icon: UserRound },
   { href: "/logout", label: "Logout Akun", icon: LogOut },
 ];
 
