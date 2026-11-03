@@ -11,7 +11,7 @@ import {
   EmptyTable,
   Pagination,
 } from "@/components/UI";
-import { AlertCircle, Check, FileDown, Plus, ReceiptText, X } from "lucide-react";
+import { AlertCircle, FileDown, Plus, ReceiptText, X } from "lucide-react";
 import { DUMMY_SERVICES, type DummyService } from "@/lib/dummyData";
 
 const SERVICE_PILLS = [
@@ -63,7 +63,7 @@ function ServiceModal({ onClose, onSubmit }: ServiceModalProps) {
     <div className="promo-modal-overlay" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
     }}>
-      <section className="promo-modal" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+      <section className="promo-modal service-card-modal" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
         <header className="promo-modal-header">
           <div className="promo-modal-icon"><ReceiptText size={22} /></div>
           <div>
@@ -109,7 +109,7 @@ function ServiceModal({ onClose, onSubmit }: ServiceModalProps) {
           </label>
           <div className="promo-modal-actions">
             <button type="button" className="promo-modal-cancel" onClick={onClose}>Batal</button>
-            <button type="submit" className="promo-modal-submit"><Check size={18} />Simpan Layanan</button>
+            <button type="submit" className="promo-modal-submit">Simpan Layanan</button>
           </div>
         </form>
       </section>
@@ -183,6 +183,13 @@ export default function LayananHarga() {
     setIsServiceModalOpen(false);
   }
 
+  const servicePillItems = SERVICE_PILLS.map((filter) => {
+    const count = filter === "Semua Layanan"
+      ? services.length
+      : services.filter((service) => service.category === filter).length;
+    return `${filter} (${count})`;
+  });
+
   return (
     <>
       <Header
@@ -235,7 +242,7 @@ export default function LayananHarga() {
 
         {/* FILTER */}
         <Pills
-          items={SERVICE_PILLS}
+          items={servicePillItems}
           active={SERVICE_PILLS.indexOf(selectedPill)}
           onChange={(index) => {
             setSelectedPill(SERVICE_PILLS[index]);

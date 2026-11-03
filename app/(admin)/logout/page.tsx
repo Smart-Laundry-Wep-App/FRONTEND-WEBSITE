@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Check, Loader2 } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 
 export default function Logout() {
   const [status, setStatus] = useState<"processing" | "success">("processing");
@@ -75,9 +75,7 @@ export default function Logout() {
           </div>
         ) : (
           <div className="logout-card logout-card--success" role="status" aria-live="polite">
-            <div className="success-circle logout-circle-success">
-              <Check size={64} strokeWidth={2.6} />
-            </div>
+            <div className="success-circle logout-circle-success" aria-hidden="true" />
 
             <h2>LOG OUT BERHASIL!</h2>
             <p className="logout-subtext">Anda telah keluar dari akun admin. Mengalihkan ke login...</p>

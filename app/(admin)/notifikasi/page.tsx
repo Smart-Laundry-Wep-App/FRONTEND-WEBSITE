@@ -75,7 +75,7 @@ export default function Notifikasi() {
             }}
           />
           <PrimaryButton icon={Plus} onClick={() => setIsModalOpen(true)}>
-            Kirim Notifikasi
+            Tambah Notifikasi
           </PrimaryButton>
         </div>
 
@@ -117,91 +117,78 @@ export default function Notifikasi() {
         />
       </section>
 
-      {/* MODAL KIRIM NOTIFIKASI */}
+      {/* MODAL TAMBAH NOTIFIKASI */}
       {isModalOpen && (
         <div
-          className="om-overlay om-overlay--open"
-          onClick={(e) => {
+          className="promo-modal-overlay"
+          onMouseDown={(e) => {
             if (e.target === e.currentTarget) setIsModalOpen(false);
           }}
         >
-          <div className="om-card om-card--open" role="dialog" style={{ maxWidth: "480px" }}>
-            <div className="om-header">
-              <div className="om-header-icon">
+          <section
+            className="promo-modal notif-card-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notif-modal-title"
+          >
+            <header className="promo-modal-header">
+              <div className="promo-modal-icon">
                 <Bell size={22} />
               </div>
-              <div className="om-header-copy">
-                <h2>Kirim Notifikasi Pelanggan</h2>
+              <div>
+                <h2 id="notif-modal-title">Kirim Notifikasi Pelanggan</h2>
                 <p>Broadcast pesan WhatsApp atau notifikasi pesanan pelanggan</p>
               </div>
               <button
-                className="om-close"
                 type="button"
+                className="promo-modal-close"
                 aria-label="Tutup"
                 onClick={() => setIsModalOpen(false)}
               >
-                <X size={18} />
+                <X size={20} />
               </button>
-            </div>
+            </header>
 
-            <form onSubmit={handleAddNotification} style={{ padding: "20px 24px" }}>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "6px" }}>
-                  Judul Notifikasi
-                </label>
+            <form className="promo-modal-form" onSubmit={handleAddNotification} noValidate>
+              <label>
+                Judul Notifikasi
                 <input
                   type="text"
                   required
+                  maxLength={80}
                   placeholder="Contoh: Pesanan #ORD-8929 Siap Diambil"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #cbd5e1",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                  }}
                 />
-              </div>
+              </label>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "6px" }}>
-                  Isi Pesan Notifikasi
-                </label>
+              <label>
+                Isi Pesan Notifikasi
                 <textarea
                   required
                   rows={4}
-                  placeholder="Halo Kak [Nama Pelanggan], cucian Anda sudah selesai dikemas rapi..."
+                  placeholder="Halo Kak [Nama Pelanggan], cucian Anda sudah selesai dikemas rapi dan siap diambil..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #cbd5e1",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    fontFamily: "inherit",
-                    resize: "vertical",
-                  }}
+                  className="promo-modal-textarea"
                 />
-              </div>
+              </label>
 
-              <div className="om-actions" style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <div className="promo-modal-actions">
                 <button
                   type="button"
-                  className="om-btn-cancel"
+                  className="promo-modal-cancel"
                   onClick={() => setIsModalOpen(false)}
                 >
                   Batal
                 </button>
-                <button type="submit" className="om-btn-submit">
-                  <Send size={16} />
+                <button type="submit" className="promo-modal-submit">
+                  <Send size={15} />
                   Kirim Sekarang
                 </button>
               </div>
             </form>
-          </div>
+          </section>
         </div>
       )}
     </>

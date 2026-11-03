@@ -278,7 +278,7 @@ export default function Pembayaran() {
 
         <div className="payment-controls">
           <Pills
-            items={PAYMENT_PILLS}
+            items={paymentPillItems}
             active={PAYMENT_PILLS.indexOf(selectedPill)}
             onChange={(index) => {
               setSelectedPill(PAYMENT_PILLS[index]);
@@ -341,3 +341,11 @@ export default function Pembayaran() {
     </>
   );
 }
+
+const paymentPillItems = PAYMENT_PILLS.map((filter) => {
+  let count = 0;
+  if (filter === "Semua") count = DUMMY_PAYMENTS.length;
+  else if (filter === "Sudah Dibayar") count = DUMMY_PAYMENTS.filter((payment) => payment.status === "Lunas").length;
+  else count = DUMMY_PAYMENTS.filter((payment) => payment.status.toLowerCase() === filter.toLowerCase()).length;
+  return `${filter} (${count})`;
+});
