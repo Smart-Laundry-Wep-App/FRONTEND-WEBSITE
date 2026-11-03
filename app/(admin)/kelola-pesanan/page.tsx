@@ -222,7 +222,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   required
                   type="number"
                   min="1"
-                  step="0.5"
+                  step="1"
                   value={weight}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
@@ -400,8 +400,8 @@ export default function KelolaPesanan() {
     }
 
     // 1. Validasi Berat: di bawah 1 tidak bisa
-    if (!Number.isFinite(weight) || weight < 1) {
-      setFormError("Berat cucian tidak boleh di bawah 1 kg (minimal 1 kg).");
+    if (!Number.isFinite(weight) || !Number.isInteger(weight) || weight < 1) {
+      setFormError("Berat cucian harus berupa angka bulat minimal 1 kg.");
       return;
     }
 

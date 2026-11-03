@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { SearchBox, PrimaryButton, EmptyTable, Pagination } from "@/components/UI";
 import { Plus, X, Send, Bell } from "lucide-react";
 import { DUMMY_NOTIFICATIONS, type DummyNotification } from "@/lib/dummyData";
+import { readNotifications, saveNotifications } from "@/lib/notificationStorage";
 
 export default function Notifikasi() {
   const [notifications, setNotifications] = useState<DummyNotification[]>(DUMMY_NOTIFICATIONS);
@@ -14,6 +15,14 @@ export default function Notifikasi() {
   const [newTitle, setNewTitle] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const perPage = 5;
+
+  useEffect(() => {
+    try {
+      setNotifications(readNotifications());
+    } catch (error) {
+      console.error("Gagal membaca data notifikasi:", error);
+    }
+  }, []);
 
   const filtered = notifications.filter((item) => {
     const q = search.trim().toLowerCase();
@@ -43,7 +52,9 @@ export default function Notifikasi() {
       status: "Terkirim",
     };
 
-    setNotifications([newItem, ...notifications]);
+    const updatedNotifications = [newItem, ...notifications];
+    setNotifications(updatedNotifications);
+    saveNotifications(updatedNotifications);
     setNewTitle("");
     setNewMessage("");
     setIsModalOpen(false);
