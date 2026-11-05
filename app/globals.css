@@ -632,7 +632,11 @@ h6,
   animation: headerSlideDown 0.4s var(--ease-out) both;
   position: sticky;
   top: 0;
+<<<<<<< HEAD
   z-index: 30;
+=======
+  z-index: 20;
+>>>>>>> e78ca98 (revisi finall)
   overflow: hidden;
 }
 
@@ -1414,7 +1418,7 @@ td:first-child {
 
 .promo-toolbar .secondary-button,
 .promo-toolbar .primary-button {
-  height: 64px;
+  height: 46px;
   min-width: 205px;
 }
 
@@ -1686,6 +1690,7 @@ td:first-child {
 
 .service-toolbar .secondary-button,
 .service-toolbar .primary-button {
+<<<<<<< HEAD
  min-width: 205px;
  padding: 0 20px;
  justify-content: center;
@@ -1707,6 +1712,10 @@ td:first-child {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+=======
+  height: 46px;
+  min-width: 205px;
+>>>>>>> e78ca98 (revisi finall)
 }
 
 /* ================================
@@ -2036,9 +2045,13 @@ td:first-child {
   border: 1px solid #cfd3da;
   border-radius: 8px;
   overflow: hidden;
+<<<<<<< HEAD
   background: linear-gradient(180deg, #eef1fb 0%, #f4f6fd 100%);
   display: flex;
   flex-direction: column;
+=======
+  background: #fff;
+>>>>>>> e78ca98 (revisi finall)
 }
 
 .chart-svg-wrap svg {
@@ -3991,6 +4004,7 @@ td:first-child {
   height: 48px;
   min-width: 48px;
   flex: 0 0 48px;
+  margin-top: 6px;
   border-radius: 9px;
   background: #4664e8;
   color: #ffffff;
@@ -5649,6 +5663,7 @@ thead tr {
 .header-notification-link { position: relative; display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
 .header-notification-badge { position: absolute; top: -7px; right: -7px; min-width: 16px; height: 16px; padding: 0 4px; border: 1.5px solid #fff; border-radius: 999px; background: #dc2626; color: #fff; display: grid; place-items: center; font-size: 9px; font-weight: 700; line-height: 1; box-shadow: 0 1px 4px rgba(220,38,38,.22); }
 .header-account .header-notification-badge { display: grid; font-size: 9px; line-height: 1; }
+<<<<<<< HEAD
 /* Ukuran aksi pembayaran disamakan dengan kotak pencarian */
 .payment-action-group .danger-button,
 .payment-action-group .secondary-button {
@@ -5692,5 +5707,443 @@ thead tr {
   .promo-toolbar .secondary-button {
     flex: 1;
     min-width: 0;
+=======
+
+/* Keep summary cards and data tables consistent across admin pages. */
+.stat-card,
+.payment-top .stat-card,
+.promo-stat-grid .stat-card,
+.service-stat-grid .stat-card {
+  box-sizing: border-box;
+  width: 100%;
+  height: 124px;
+  min-height: 124px;
+  padding: 10px 13px 16px;
+  align-items: flex-start;
+}
+
+.stat-copy,
+.dashboard-stats .stat-copy,
+.payment-top .stat-copy,
+.promo-stat-grid .stat-copy,
+.service-stat-grid .stat-copy {
+  flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 58px);
+  padding-right: 4px;
+}
+
+.stat-label,
+.promo-stat-grid .stat-label,
+.service-stat-grid .stat-label {
+  font-size: 11px;
+  line-height: 1.15;
+}
+
+.stat-value,
+.payment-top .stat-value,
+.promo-stat-grid .stat-value,
+.service-stat-grid .stat-value {
+  margin-top: 3px;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.stat-note,
+.payment-top .stat-note,
+.promo-stat-grid .stat-note,
+.service-stat-grid .stat-note {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.dashboard-stats .stat-note {
+  padding-right: 0;
+  letter-spacing: 0.2px;
+}
+
+.dashboard-stats .stat-badge {
+  bottom: 23px;
+}
+
+.stat-icon,
+.payment-top .stat-icon,
+.promo-stat-grid .stat-icon,
+.service-stat-grid .stat-icon {
+  box-sizing: border-box;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  flex: 0 0 48px;
+}
+
+.stat-badge {
+  bottom: 13px;
+}
+
+.table-wrap {
+  width: 100%;
+}
+
+.table-wrap th {
+  box-sizing: border-box;
+  height: 48px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.table-wrap td,
+.dashboard-table td,
+.notification-content .table-wrap td {
+  box-sizing: border-box;
+  height: 64px;
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+.notification-content .table-wrap td {
+  padding: 6px 12px !important;
+}
+
+.notification-content .table-wrap td p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.dashboard-content .status.sedang-cuci {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.dashboard-content .status.siap-diambil {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.dashboard-content .status.pengantaran {
+  background: #fef9c3;
+  color: #a16207;
+  border: 1px solid #fef08a;
+}
+
+.dashboard-content .status.selesai {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.auth-page.login-layout {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  padding: clamp(12px, 2.4vh, 24px) clamp(16px, 3vw, 40px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.9fr);
+  align-items: stretch;
+  justify-content: stretch;
+  gap: 0;
+  background: #edf3fa;
+  overflow: hidden;
+}
+
+.auth-page.login-layout::before,
+.auth-page.login-layout::after {
+  display: none;
+}
+
+.login-visual {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(28px, 4vw, 60px);
+  border-radius: 26px 0 0 26px;
+  background:
+    radial-gradient(ellipse at 42% 42%, rgba(255, 255, 255, 0.96), transparent 49%),
+    linear-gradient(145deg, #f8fbff 0%, #e8f1fb 100%);
+}
+
+.login-visual::before,
+.login-visual::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(47, 105, 177, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.login-visual::before {
+  width: 420px;
+  height: 420px;
+  top: 8%;
+  left: 18%;
+}
+
+.login-visual::after {
+  width: 320px;
+  height: 320px;
+  top: calc(8% + 50px);
+  left: calc(18% + 50px);
+}
+
+.login-visual-art {
+  position: absolute;
+  inset: 3% 5% 38%;
+  display: grid;
+  place-items: center;
+}
+
+.login-illustration {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login-visual-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 470px;
+  margin-top: auto;
+  padding-top: clamp(150px, 34vh, 280px);
+  transform: translateY(10px);
+  color: #253b57;
+}
+
+.login-visual-eyebrow {
+  color: #527ba9;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.login-visual-copy h2 {
+  margin: 12px 0 10px;
+  color: #1d3552;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.18;
+  letter-spacing: -0.8px;
+}
+
+.login-visual-copy p {
+  max-width: 390px;
+  margin: 0;
+  color: #657b94;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.login-visual-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  color: #42658b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-visual-detail span {
+  width: 26px;
+  height: 2px;
+  border-radius: 2px;
+  background: #83a9ce;
+}
+
+.login-form-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 2vw, 32px);
+  border-radius: 0 26px 26px 0;
+  background: #fff;
+}
+
+.login-form-panel .login-card {
+  max-width: 440px;
+  padding: 20px 24px;
+  box-shadow: none;
+  border-color: transparent;
+  animation: none;
+}
+
+@media (max-width: 900px) {
+  .auth-page.login-layout {
+    grid-template-columns: minmax(0, 0.9fr) minmax(380px, 1fr);
+    padding: clamp(10px, 2vh, 18px);
+  }
+
+  .login-visual {
+    padding: 38px;
+  }
+
+  .login-visual-eyebrow {
+    font-size: 24px;
+  }
+
+  .login-visual-copy {
+    transform: translateY(8px);
+  }
+
+  .login-form-panel {
+    padding: 14px;
+  }
+
+}
+
+@media (max-width: 720px) {
+  .auth-page.login-layout {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    padding: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(150px, 28dvh) minmax(0, 1fr);
+  }
+
+  .login-visual {
+    min-height: 0;
+    padding: 18px 20px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .login-visual-art {
+    inset: 2% 0 0 40%;
+  }
+
+  .login-visual-copy {
+    max-width: 58%;
+    padding-top: 0;
+    transform: none;
+  }
+
+  .login-visual-eyebrow {
+    font-size: 14px;
+    letter-spacing: 0.7px;
+  }
+
+  .login-visual-copy h2 {
+    margin: 6px 0;
+    font-size: clamp(18px, 5vw, 23px);
+  }
+
+  .login-visual-copy p {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .login-visual-detail {
+    margin-top: 8px;
+    font-size: 10px;
+  }
+
+  .login-form-panel {
+    min-height: 0;
+    overflow: hidden;
+    padding: 6px 16px;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .login-form-panel .login-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 8px 6px;
+  }
+
+  .login-form-panel .auth-logo {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 4px;
+  }
+
+  .login-form-panel .admin-pill {
+    height: 23px;
+    line-height: 23px;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  .login-form-panel .auth-card h1 {
+    font-size: 19px;
+  }
+
+  .login-form-panel .auth-tag {
+    margin-bottom: 3px;
+    font-size: 9px;
+  }
+
+  .login-form-panel .auth-welcome {
+    margin: 2px 0 10px;
+    font-size: 11px;
+  }
+
+  .login-form-panel .auth-card > label {
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+
+  .login-form-panel .auth-field {
+    height: 38px;
+    margin-bottom: 8px;
+  }
+
+  .login-form-panel .auth-forgot {
+    margin: -2px 0 10px;
+  }
+
+  .login-form-panel .auth-submit {
+    height: 40px;
+  }
+
+  .login-form-panel .auth-or {
+    margin: 10px 0 8px;
+  }
+
+  .login-form-panel .login-social-row button {
+    height: 38px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 721px) {
+  .login-visual-copy {
+    padding-top: clamp(120px, 27vh, 200px);
+  }
+
+  .login-form-panel .login-card {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .login-form-panel .auth-logo {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 6px;
+  }
+
+  .login-form-panel .auth-welcome {
+    margin-bottom: 12px;
+  }
+
+  .login-form-panel .auth-field {
+    height: 40px;
+    margin-bottom: 8px;
+  }
+
+  .login-form-panel .auth-forgot {
+    margin-bottom: 12px;
+  }
+
+  .login-form-panel .auth-or {
+    margin: 12px 0 10px;
+>>>>>>> e78ca98 (revisi finall)
   }
 }

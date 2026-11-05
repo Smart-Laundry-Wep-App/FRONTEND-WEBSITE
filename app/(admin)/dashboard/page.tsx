@@ -6,7 +6,13 @@ import { StatCard, Pills, EmptyTable, Pagination } from "@/components/UI";
 import { QrCode, Hourglass, Clock3, SquareCheckBig, Truck } from "lucide-react";
 import { DUMMY_ORDERS, type DummyOrder } from "@/lib/dummyData";
 
-const PILL_OPTIONS = ["Semua", "Sedang Cuci", "Siap Diambil", "Pengeringan", "Pengantaran"];
+const PILL_OPTIONS = ["Semua", "Sedang Cuci", "Siap Diambil", "Pengantaran", "Selesai"];
+
+function normalizeOrderStatus(status: string) {
+  if (status === "Antaran") return "Selesai";
+  if (status === "Pengeringan") return "Sedang Cuci";
+  return status;
+}
 
 function getOrderIcon(status: string, index: number) {
   if (status === "Sedang Cuci") return <Hourglass size={20} />;
@@ -41,7 +47,13 @@ export default function Dashboard() {
 
   const filteredOrders = useMemo(() => {
     if (selectedFilter === "Semua") return DUMMY_ORDERS;
+<<<<<<< HEAD
     return DUMMY_ORDERS.filter((order) => matchesOrderFilter(order, selectedFilter));
+=======
+    return DUMMY_ORDERS.filter((order) => {
+      return normalizeOrderStatus(order.status).toLowerCase() === selectedFilter.toLowerCase();
+    });
+>>>>>>> e78ca98 (revisi finall)
   }, [selectedFilter]);
 
   const pillItems = PILL_OPTIONS.map((filter) => {
@@ -52,6 +64,13 @@ export default function Dashboard() {
   });
 
   const currentOrders = filteredOrders.slice((page - 1) * perPage, page * perPage);
+  const pillItems = PILL_OPTIONS.map((status) => {
+    const count =
+      status === "Semua"
+        ? DUMMY_ORDERS.length
+        : DUMMY_ORDERS.filter((order) => normalizeOrderStatus(order.status) === status).length;
+    return `${status} (${count})`;
+  });
 
   return (
     <>
@@ -141,8 +160,8 @@ export default function Dashboard() {
                     </small>
                   </td>
                   <td>
-                    <span className={`status ${order.status.toLowerCase().replaceAll(" ", "-")}`}>
-                      {order.status}
+                    <span className={`status ${normalizeOrderStatus(order.status).toLowerCase().replaceAll(" ", "-")}`}>
+                      {normalizeOrderStatus(order.status)}
                     </span>
                   </td>
                   <td>

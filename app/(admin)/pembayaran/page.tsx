@@ -209,6 +209,18 @@ export default function Pembayaran() {
     return payment.status.toLowerCase() === selectedPill.toLowerCase();
   });
 
+  const paymentPillItems = PAYMENT_PILLS.map((status) => {
+    const count =
+      status === "Semua"
+        ? DUMMY_PAYMENTS.length
+        : DUMMY_PAYMENTS.filter((payment) =>
+            status === "Sudah Dibayar"
+              ? payment.status === "Lunas"
+              : payment.status === status,
+          ).length;
+    return `${status} (${count})`;
+  });
+
   const visiblePayments = filteredPayments.slice((page - 1) * perPage, page * perPage);
 
   return (

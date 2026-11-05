@@ -441,7 +441,55 @@ export default function RiwayatTransaksi() {
         </SecondaryButton>
       </div>
 
+<<<<<<< HEAD
       <RevenueChart />
+=======
+      <div className="chart-card">
+        <div className="chart-card-header">
+          <div className="chart-label">TOTAL OMSET / PENDAPATAN</div>
+          <span className="chart-badge">Grafik Arus Kas</span>
+        </div>
+        <div className="chart">
+          <div className="chart-y">
+            <span>Rp. 2.000.000</span>
+            <span>Rp. 1.500.000</span>
+            <span>Rp. 1.000.000</span>
+            <span>Rp. 500.000</span>
+            <span>Rp. 0</span>
+          </div>
+          <div className="chart-svg-wrap">
+            <svg viewBox="0 0 820 180" preserveAspectRatio="none">
+              <g>
+                <path
+                  className="chart-line"
+                  d="M10 130 C55 130 83 105 140 100 C190 96 220 77 270 75 C320 73 350 96 400 95 C445 94 485 89 530 88 C580 87 610 48 660 45 C710 43 755 53 800 53"
+                  fill="none"
+                  stroke="#2531b6"
+                  strokeWidth="1.2"
+                  pathLength="1"
+                />
+                <circle className="chart-point" cx="10" cy="130" r="3.5" fill="#4d9d00" />
+                <circle className="chart-point" cx="140" cy="100" r="3.5" fill="#4d9d00" />
+                <circle className="chart-point" cx="270" cy="75" r="3.5" fill="#4d9d00" />
+                <circle className="chart-point" cx="400" cy="95" r="3.5" fill="#ef4444" />
+                <circle className="chart-point" cx="530" cy="88" r="3.5" fill="#ef4444" />
+                <circle className="chart-point" cx="660" cy="45" r="3.5" fill="#4d9d00" />
+                <circle className="chart-point" cx="800" cy="53" r="3.5" fill="#ef4444" />
+                <g fill="#496185" fontSize="13">
+                  <text x="12" y="170" textAnchor="start">Mei '26</text>
+                  <text x="140" y="170" textAnchor="middle">Jun '26</text>
+                  <text x="270" y="170" textAnchor="middle">Jul '26</text>
+                  <text x="400" y="170" textAnchor="middle">Agu '26</text>
+                  <text x="530" y="170" textAnchor="middle">Sep '26</text>
+                  <text x="660" y="170" textAnchor="middle">Okt '26</text>
+                  <text x="808" y="170" textAnchor="end">Nov '26</text>
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+>>>>>>> e78ca98 (revisi finall)
 
       <Pills
         items={txPillItems}

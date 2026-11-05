@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef, type FormEvent } from "react";
+<<<<<<< HEAD
 import { X, User, Phone, WashingMachine, Scale, Coins, AlertCircle, ClipboardList, ChevronDown, Trash2 } from "lucide-react";
+=======
+import { X, User, Phone, WashingMachine, Scale, Coins, CheckCircle2, AlertCircle, ClipboardList, ChevronDown, Trash2 } from "lucide-react";
+>>>>>>> e78ca98 (revisi finall)
 import Header from "@/components/Header";
 import {
   SearchBox,
@@ -14,7 +18,7 @@ import api from "@/lib/api";
 import { DUMMY_ORDERS } from "@/lib/dummyData";
 
 const STORAGE_KEY = "sca-smart-laundry-orders";
-const STATUSES = ["Sedang Cuci", "Pengantaran", "Siap Diambil", "Selesai"];
+const STATUSES = ["Sedang Cuci", "Siap Diambil", "Pengantaran", "Selesai"];
 const ITEMS_PER_PAGE = 5;
 
 interface LaundryOrder {

@@ -153,6 +153,14 @@ export default function InfoPromo() {
     return promo.status === selectedPill;
   });
 
+  const promoPillItems = PROMO_PILLS.map((status) => {
+    const count =
+      status === "Semua"
+        ? promos.length
+        : promos.filter((promo) => promo.status === status).length;
+    return `${status} (${count})`;
+  });
+
   const visiblePromos = filteredPromos.slice((page - 1) * perPage, page * perPage);
 
   function exportReport() {
