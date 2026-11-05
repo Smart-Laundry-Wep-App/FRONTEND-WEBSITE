@@ -140,6 +140,14 @@ export default function LayananHarga() {
     return service.category === selectedPill;
   });
 
+  const servicePillItems = SERVICE_PILLS.map((category) => {
+    const count =
+      category === "Semua Layanan"
+        ? services.length
+        : services.filter((service) => service.category === category).length;
+    return `${category} (${count})`;
+  });
+
   const visibleServices = filteredServices.slice((page - 1) * perPage, page * perPage);
 
   function exportServices() {
