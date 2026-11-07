@@ -6,7 +6,13 @@ import { StatCard, Pills, EmptyTable, Pagination } from "@/components/UI";
 import { QrCode, Hourglass, Clock3, SquareCheckBig, Truck } from "lucide-react";
 import { DUMMY_ORDERS, type DummyOrder } from "@/lib/dummyData";
 
-const PILL_OPTIONS = ["Semua", "Sedang Cuci", "Siap Diambil", "Pengeringan", "Pengantaran"];
+const PILL_OPTIONS = ["Semua", "Sedang Cuci", "Siap Diambil", "Pengantaran", "Selesai"];
+
+function normalizeOrderStatus(status: string) {
+  if (status === "Antaran") return "Selesai";
+  if (status === "Pengeringan") return "Sedang Cuci";
+  return status;
+}
 
 function getOrderIcon(status: string, index: number) {
   if (status === "Sedang Cuci") return <Hourglass size={20} />;
@@ -24,6 +30,16 @@ function formatRupiah(amount: number) {
   }).format(amount);
 }
 
+function matchesOrderFilter(order: DummyOrder, filter: string) {
+  if (filter === "Pengeringan") {
+    return order.status === "Sedang Cuci" || order.service.toLowerCase().includes("kering");
+  }
+  if (filter === "Pengantaran") {
+    return order.status === "Pengantaran" || order.status === "Antaran";
+  }
+  return order.status.toLowerCase() === filter.toLowerCase();
+}
+
 export default function Dashboard() {
   const [selectedFilter, setSelectedFilter] = useState("Semua");
   const [page, setPage] = useState(1);
@@ -31,15 +47,16 @@ export default function Dashboard() {
 
   const filteredOrders = useMemo(() => {
     if (selectedFilter === "Semua") return DUMMY_ORDERS;
-    return DUMMY_ORDERS.filter((order) => {
-      if (selectedFilter === "Pengeringan") {
-        return order.status === "Sedang Cuci" || order.service.toLowerCase().includes("kering");
-      }
-      return order.status.toLowerCase() === selectedFilter.toLowerCase();
-    });
+    return DUMMY_ORDERS.filter((order) => matchesOrderFilter(order, selectedFilter));
   }, [selectedFilter]);
 
-  const totalPages = Math.ceil(filteredOrders.length / perPage) || 1;
+  const pillItems = PILL_OPTIONS.map((filter) => {
+    const count = filter === "Semua"
+      ? DUMMY_ORDERS.length
+      : DUMMY_ORDERS.filter((order) => matchesOrderFilter(order, filter)).length;
+    return `${filter} (${count})`;
+  });
+
   const currentOrders = filteredOrders.slice((page - 1) * perPage, page * perPage);
 
   return (
@@ -100,7 +117,7 @@ export default function Dashboard() {
         </div>
 
         <Pills
-          items={PILL_OPTIONS}
+          items={pillItems}
           active={PILL_OPTIONS.indexOf(selectedFilter)}
           onChange={(index) => {
             setSelectedFilter(PILL_OPTIONS[index]);
@@ -130,8 +147,8 @@ export default function Dashboard() {
                     </small>
                   </td>
                   <td>
-                    <span className={`status ${order.status.toLowerCase().replaceAll(" ", "-")}`}>
-                      {order.status}
+                    <span className={`status ${normalizeOrderStatus(order.status).toLowerCase().replaceAll(" ", "-")}`}>
+                      {normalizeOrderStatus(order.status)}
                     </span>
                   </td>
                   <td>
@@ -166,6 +183,7 @@ export default function Dashboard() {
           total={filteredOrders.length}
           perPage={perPage}
           page={page}
+          minPages={3}
           onPageChange={setPage}
         />
       </section>

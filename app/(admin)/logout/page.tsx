@@ -75,8 +75,8 @@ export default function Logout() {
           </div>
         ) : (
           <div className="logout-card logout-card--success" role="status" aria-live="polite">
-            <div className="success-circle logout-circle-success">
-              <Check size={64} strokeWidth={2.6} />
+            <div className="success-circle logout-circle-success" aria-hidden="true">
+              <Check size={64} strokeWidth={2.6} className="logout-check-icon" />
             </div>
 
             <h2>LOG OUT BERHASIL!</h2>

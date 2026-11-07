@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import { ProfileIcon, InputField } from "@/components/UI";
-import { Mail, UserRound, Phone, MapPin, Shield, Eye, Check } from "lucide-react";
+import { Mail, UserRound, Phone, MapPin, Shield, Eye } from "lucide-react";
 
 export default function ProfilAdmin() {
   const [saved, setSaved] = useState(false);
@@ -96,7 +96,7 @@ export default function ProfilAdmin() {
               <button type="submit" className="save-button">
                 {saved ? (
                   <>
-                    <Check size={18} /> &nbsp; Perubahan Berhasil Disimpan!
+                    Perubahan Berhasil Disimpan!
                   </>
                 ) : (
                   <>Simpan Perubahan</>

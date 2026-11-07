@@ -198,18 +198,27 @@ export default function Pembayaran() {
 
   const filteredPayments = DUMMY_PAYMENTS.filter((payment) => {
     const q = search.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      payment.orderId.toLowerCase().includes(q) ||
-      payment.customer.toLowerCase().includes(q) ||
-      payment.phone.includes(q) ||
-      payment.paymentMethod.toLowerCase().includes(q);
+    const matchesSearch = !q || Object.values(payment).some((value) =>
+      String(value ?? "").toLowerCase().includes(q),
+    );
 
     if (!matchesSearch) return false;
 
     if (selectedPill === "Semua") return true;
     if (selectedPill === "Sudah Dibayar") return payment.status === "Lunas";
     return payment.status.toLowerCase() === selectedPill.toLowerCase();
+  });
+
+  const paymentPillItems = PAYMENT_PILLS.map((status) => {
+    const count =
+      status === "Semua"
+        ? DUMMY_PAYMENTS.length
+        : DUMMY_PAYMENTS.filter((payment) =>
+            status === "Sudah Dibayar"
+              ? payment.status === "Lunas"
+              : payment.status === status,
+          ).length;
+    return `${status} (${count})`;
   });
 
   const visiblePayments = filteredPayments.slice((page - 1) * perPage, page * perPage);
@@ -221,17 +230,8 @@ export default function Pembayaran() {
         subtitle="Verifikasi tagihan pelanggan dan pembayaran laundry"
       />
 
-      <section className="content">
+      <section className="content payment-content">
         <div className="payment-top">
-          <SearchBox
-            placeholder="Cari No Pembayaran, Nama Pelanggan..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-
           <StatCard
             label="MENUNGGU PELUNASAN"
             value="Rp. 100.000"
@@ -247,17 +247,17 @@ export default function Pembayaran() {
           />
         </div>
 
-        <div className="payment-controls">
-          <Pills
-            items={PAYMENT_PILLS}
-            active={PAYMENT_PILLS.indexOf(selectedPill)}
-            onChange={(index) => {
-              setSelectedPill(PAYMENT_PILLS[index]);
+        <div className="payment-search-row">
+          <SearchBox
+            placeholder="Cari No Pembayaran, Nama Pelanggan..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
               setPage(1);
             }}
           />
 
-          <div className="button-group">
+          <div className="button-group payment-action-group">
             <button
               className="danger-button"
               type="button"
@@ -286,6 +286,17 @@ export default function Pembayaran() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="payment-controls">
+          <Pills
+            items={paymentPillItems}
+            active={PAYMENT_PILLS.indexOf(selectedPill)}
+            onChange={(index) => {
+              setSelectedPill(PAYMENT_PILLS[index]);
+              setPage(1);
+            }}
+          />
         </div>
 
         <EmptyTable
@@ -342,3 +353,11 @@ export default function Pembayaran() {
     </>
   );
 }
+
+const paymentPillItems = PAYMENT_PILLS.map((filter) => {
+  let count = 0;
+  if (filter === "Semua") count = DUMMY_PAYMENTS.length;
+  else if (filter === "Sudah Dibayar") count = DUMMY_PAYMENTS.filter((payment) => payment.status === "Lunas").length;
+  else count = DUMMY_PAYMENTS.filter((payment) => payment.status.toLowerCase() === filter.toLowerCase()).length;
+  return `${filter} (${count})`;
+});
