@@ -592,21 +592,16 @@ export default function KelolaPesanan() {
     );
   }
 
-  function deleteSelectedOrder() {
-    if (!selectedOrderId) {
-      window.alert("Pilih baris pesanan yang ingin dihapus terlebih dahulu.");
-      return;
-    }
-    const orderToDelete = orders.find((order) => order.id === selectedOrderId);
+  function deleteOrder(id: string) {
+    const orderToDelete = orders.find((order) => order.id === id);
     if (!orderToDelete) {
-      setSelectedOrderId(null);
       return;
     }
     if (!window.confirm(`Hapus pesanan ${orderToDelete.id}? Tindakan ini tidak dapat dibatalkan.`)) return;
 
-    const remainingFilteredCount = filteredOrders.filter((order) => order.id !== selectedOrderId).length;
-    setOrders((current) => current.filter((order) => order.id !== selectedOrderId));
-    setSelectedOrderId(null);
+    const remainingFilteredCount = filteredOrders.filter((order) => order.id !== id).length;
+    setOrders((current) => current.filter((order) => order.id !== id));
+    setSelectedOrderId((current) => current === id ? null : current);
     setPage((currentPage) =>
       Math.min(currentPage, Math.max(1, Math.ceil(remainingFilteredCount / ITEMS_PER_PAGE))),
     );
@@ -662,19 +657,10 @@ export default function KelolaPesanan() {
             active={Math.max(0, STATUSES.indexOf(statusFilter) + 1)}
             onChange={(index) => selectStatus(index === 0 ? "Semua" : STATUSES[index - 1])}
           />
-          <button
-            type="button"
-            className="order-delete-button order-delete-selected"
-            disabled={orders.length === 0}
-            onClick={deleteSelectedOrder}
-          >
-            <Trash2 size={16} />
-            Delete
-          </button>
         </div>
 
         <EmptyTable
-          headers={["ID PELANGGAN", "PELANGGAN", "LAYANAN STATUS", "STATUS"]}
+          headers={["ID PELANGGAN", "PELANGGAN", "LAYANAN STATUS", "STATUS", "AKSI"]}
           rows={0}
         >
           {visibleOrders.length ? visibleOrders.map((order) => (
@@ -716,10 +702,21 @@ export default function KelolaPesanan() {
                   ))}
                 </select>
               </td>
+              <td>
+                <button
+                  type="button"
+                  className="order-delete-button order-delete-row"
+                  aria-label={`Hapus pesanan ${order.id}`}
+                  onClick={() => deleteOrder(order.id)}
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </td>
             </tr>
           )) : (
             <tr>
-              <td className="order-empty" colSpan={4}>
+              <td className="order-empty" colSpan={5}>
                 {orders.length
                   ? "Tidak ada pesanan yang cocok."
                   : "Belum ada pesanan. Klik \u201cTambah Pesanan\u201d untuk mulai mencatat."}

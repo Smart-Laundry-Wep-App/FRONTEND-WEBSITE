@@ -194,9 +194,10 @@ export default function Pembayaran() {
   const [search, setSearch] = useState("");
   const [selectedPill, setSelectedPill] = useState("Semua");
   const [page, setPage] = useState(1);
+  const [payments, setPayments] = useState<DummyPayment[]>(DUMMY_PAYMENTS);
   const perPage = 5;
 
-  const filteredPayments = DUMMY_PAYMENTS.filter((payment) => {
+  const filteredPayments = payments.filter((payment) => {
     const q = search.trim().toLowerCase();
     const matchesSearch = !q || Object.values(payment).some((value) =>
       String(value ?? "").toLowerCase().includes(q),
@@ -209,11 +210,21 @@ export default function Pembayaran() {
     return payment.status.toLowerCase() === selectedPill.toLowerCase();
   });
 
+  function deletePayment(id: string) {
+    const paymentToDelete = payments.find((payment) => payment.id === id);
+    if (!paymentToDelete) return;
+    if (!window.confirm(`Hapus pembayaran ${paymentToDelete.id}? Tindakan ini tidak dapat dibatalkan.`)) return;
+
+    const remainingFilteredCount = filteredPayments.filter((payment) => payment.id !== id).length;
+    setPayments((current) => current.filter((payment) => payment.id !== id));
+    setPage((currentPage) => Math.min(currentPage, Math.max(1, Math.ceil(remainingFilteredCount / perPage))));
+  }
+
   const paymentPillItems = PAYMENT_PILLS.map((status) => {
     const count =
       status === "Semua"
-        ? DUMMY_PAYMENTS.length
-        : DUMMY_PAYMENTS.filter((payment) =>
+        ? payments.length
+        : payments.filter((payment) =>
             status === "Sudah Dibayar"
               ? payment.status === "Lunas"
               : payment.status === status,
@@ -258,15 +269,6 @@ export default function Pembayaran() {
           />
 
           <div className="button-group payment-action-group">
-            <button
-              className="danger-button"
-              type="button"
-              onClick={() => alert("Pilih data transaksi yang ingin dihapus.")}
-            >
-              <Trash2 size={19} />
-              Delete
-            </button>
-
             <div className="payment-calendar-anchor" ref={calendarAnchorRef}>
               <button
                 type="button"
@@ -306,6 +308,7 @@ export default function Pembayaran() {
             "TOTAL",
             "STATUS",
             "PEMBAYARAN",
+            "AKSI",
           ]}
           rows={0}
         >
@@ -332,11 +335,22 @@ export default function Pembayaran() {
                   <strong>{p.paymentMethod}</strong>
                   <small>{p.id}</small>
                 </td>
+                <td>
+                  <button
+                    className="order-delete-button order-delete-row"
+                    type="button"
+                    aria-label={`Hapus pembayaran ${p.id}`}
+                    onClick={() => deletePayment(p.id)}
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
+              <td colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
                 Tidak ada data pembayaran yang sesuai kriteria pencarian.
               </td>
             </tr>
