@@ -2607,16 +2607,6 @@ td:first-child {
   animation: successBounce 0.5s var(--ease-spring) both;
 }
 
-.logout-success-check path {
-  stroke-dasharray: 24;
-  stroke-dashoffset: 24;
-  animation: logoutCheckDraw 0.45s ease-out 0.2s forwards;
-}
-
-@keyframes logoutCheckDraw {
-  to { stroke-dashoffset: 0; }
-}
-
 @keyframes successBounce {
   0% { transform: scale(0.35); opacity: 0; }
   65% { transform: scale(1.12); opacity: 1; }
@@ -5660,7 +5650,6 @@ thead tr {
   }
 }
 
-<<<<<<< HEAD
 .payment-action-group .danger-button {
   min-height: 36px;
   background: #ffffff;
@@ -5760,14 +5749,10 @@ thead tr {
 .om-btn-delete-card:hover { background: #fff5f5; border-color: #f87171; box-shadow: 0 5px 14px rgba(220,38,38,.1); }
 .om-btn-delete-card:active { background: #fee2e2; }
 
-=======
->>>>>>> 3f762c4 (alhamdulilah revisi kelar)
 /* Badge jumlah pada ikon notifikasi header */
 .header-notification-link { position: relative; display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
 .header-notification-badge { position: absolute; top: -7px; right: -7px; min-width: 16px; height: 16px; padding: 0 4px; border: 1.5px solid #fff; border-radius: 999px; background: #dc2626; color: #fff; display: grid; place-items: center; font-size: 9px; font-weight: 700; line-height: 1; box-shadow: 0 1px 4px rgba(220,38,38,.22); }
 .header-account .header-notification-badge { display: grid; font-size: 9px; line-height: 1; }
-<<<<<<< HEAD
-=======
 /* Ukuran aksi pembayaran disamakan dengan kotak pencarian */
 .payment-action-group .secondary-button {
   height: 46px;
@@ -5812,7 +5797,6 @@ thead tr {
     min-width: 0;
   }
 }
->>>>>>> 3f762c4 (alhamdulilah revisi kelar)
 
 /* Keep summary cards and data tables consistent across admin pages. */
 .stat-card,
@@ -6249,8 +6233,6 @@ thead tr {
 
   .login-form-panel .auth-or {
     margin: 12px 0 10px;
-<<<<<<< HEAD
-=======
   }
 }
 
@@ -6575,6 +6557,5 @@ thead tr {
   .form-column {
     padding-right: 18px;
     padding-left: 18px;
->>>>>>> 3f762c4 (alhamdulilah revisi kelar)
   }
 }

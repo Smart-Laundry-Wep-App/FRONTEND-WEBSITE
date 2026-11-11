@@ -18,20 +18,14 @@ import {
   X,
 } from "lucide-react";
 import { authApi } from "@/lib/api";
-<<<<<<< HEAD
-=======
 import { signIn } from "next-auth/react";
->>>>>>> 3f762c4 (alhamdulilah revisi kelar)
 
 export default function Login() {
   const [show, setShow] = useState(false);
   const [identifier, setIdentifier] = useState("admin");
   const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);
-<<<<<<< HEAD
-=======
   const [googleLoading, setGoogleLoading] = useState(false);
->>>>>>> 3f762c4 (alhamdulilah revisi kelar)
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -42,8 +36,6 @@ export default function Login() {
 
   const router = useRouter();
 
-<<<<<<< HEAD
-=======
   const handleGoogleSignIn = async () => {
     setError(null);
     setSuccess(null);
@@ -63,7 +55,6 @@ export default function Login() {
     }
   };
 
->>>>>>> 3f762c4 (alhamdulilah revisi kelar)
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
