@@ -28,8 +28,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <Link href="/dashboard" className="brand">
-        <Image src="/logo.png" alt="SCA Smart Laundry" width={55} height={55} priority />
-        <span>SCA Smart Laundry</span>
+        <Image src="/sca-smart-laundry-logo.png" alt="SCA Smart Laundry" width={239} height={32} priority />
       </Link>
       <nav className="sidebar-nav">
         {items.map(({ href, label, icon: Icon }) => (

@@ -472,7 +472,7 @@ h6,
 
 .app-shell {
   display: grid;
-  grid-template-columns: 385px 1fr;
+  grid-template-columns: 300px 1fr;
   min-height: 100vh;
   background: var(--bg);
 }
@@ -534,10 +534,11 @@ h6,
 }
 
 .brand img {
-  width: 42px;
-  height: 42px;
+  display: block;
+  width: 100%;
+  max-width: 268px;
+  height: auto;
   object-fit: contain;
-  border-radius: 50%;
 }
 
 .sidebar-nav {
@@ -2468,7 +2469,7 @@ td:first-child {
 
 .logout-shell {
   display: grid;
-  grid-template-columns: 385px 1fr;
+  grid-template-columns: 300px 1fr;
   min-height: 100vh;
   background: var(--bg);
 }
