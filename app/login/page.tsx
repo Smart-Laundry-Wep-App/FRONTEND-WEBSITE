@@ -12,22 +12,26 @@ import {
   Loader2,
   Headphones,
   Globe,
-  CircleUserRound,
-  CheckCircle2,
-  Clock,
-  Bell,
   AlertCircle,
   Check,
   ChevronDown,
   X,
 } from "lucide-react";
 import { authApi } from "@/lib/api";
+<<<<<<< HEAD
+=======
+import { signIn } from "next-auth/react";
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
 
 export default function Login() {
   const [show, setShow] = useState(false);
   const [identifier, setIdentifier] = useState("admin");
   const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
+=======
+  const [googleLoading, setGoogleLoading] = useState(false);
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -38,6 +42,28 @@ export default function Login() {
 
   const router = useRouter();
 
+<<<<<<< HEAD
+=======
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setSuccess(null);
+    setGoogleLoading(true);
+
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : lang === "id"
+            ? "Gagal memulai login Google. Silakan coba lagi."
+            : "Could not start Google sign-in. Please try again."
+      );
+      setGoogleLoading(false);
+    }
+  };
+
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
@@ -170,64 +196,30 @@ export default function Login() {
              ========================================================== */}
           <div className="preview-column">
             <div className="laundry-bubble-panel">
-              {/* Natural Soft Realistic Soap Bubbles (Clean, not over-saturated) */}
-              <div className="soap-bubbles-layer" aria-hidden="true">
-                <span className="real-soap-bubble bubble-1" />
-                <span className="real-soap-bubble bubble-2" />
-                <span className="real-soap-bubble bubble-3" />
-                <span className="real-soap-bubble bubble-4" />
-                <span className="real-soap-bubble bubble-5" />
-                <span className="real-soap-bubble bubble-6" />
-                <div className="real-bubble-glow" />
-              </div>
-
-              {/* Top Tag Pill */}
-              <div className="panel-top-row">
-                <span className="bubble-brand-pill">
-                  {lang === "id" ? "SMART LAUNDRY SYSTEM" : "SMART LAUNDRY SYSTEM"}
-                </span>
-              </div>
-
-              {/* Main Branding & Consistent Info Cards */}
+              <Image
+                src="/laundry-login.png"
+                alt="Ilustrasi layanan laundry dengan mesin cuci"
+                width={1200}
+                height={800}
+                className="reference-login-illustration"
+                priority
+              />
               <div className="bubble-panel-center">
                 <h2 className="bubble-hero-title">
                   SCA SMART<br />
                   <span>LAUNDRY</span>
                 </h2>
-
-                <p className="bubble-hero-tag">
-                  {lang === "id"
-                    ? "CUCI BERSIH, WANGI & TEPAT WAKTU"
-                    : "CLEAN, FRESH & ON TIME"}
-                </p>
-
+                <h3 className="reference-login-heading">
+                  {lang === "id" ? "Urus cucian jadi lebih mudah." : "Laundry made easier."}
+                </h3>
                 <p className="bubble-hero-desc">
                   {lang === "id"
-                    ? "Solusi manajemen laundry cerdas dan profesional. Pengelolaan cucian higienis otomatis, pelacakan pesanan real-time, dan pelayanan cepat terpercaya."
-                    : "Smart and professional laundry management solution. Automated hygienic processing, real-time tracking, and reliable on-time service."}
+                    ? "Kelola layanan laundry harian dengan praktis, cepat, dan tertata dalam satu tempat."
+                    : "Manage your daily laundry service with ease, speed, and everything in one place."}
                 </p>
-
-                {/* Consistent Full-Width Info Cards (Clean Lucide Icons, Uniform Width) */}
-                <div className="bubble-info-pills">
-                  <div className="info-chip">
-                    <CheckCircle2 size={18} className="chip-svg-icon icon-blue" />
-                    <span>{lang === "id" ? "Cuci Bersih & Higienis" : "Clean & Hygienic Washing"}</span>
-                  </div>
-                  <div className="info-chip">
-                    <Clock size={18} className="chip-svg-icon icon-blue" />
-                    <span>{lang === "id" ? "Cepat & Tepat Waktu" : "Fast & On-Time Service"}</span>
-                  </div>
-                  <div className="info-chip">
-                    <Bell size={18} className="chip-svg-icon icon-blue" />
-                    <span>{lang === "id" ? "Notifikasi Otomatis" : "Automated Notifications"}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Footer Note */}
-              <div className="bubble-panel-footer">
-                <span>{lang === "id" ? "Sistem Laundry Terintegrasi" : "Integrated Laundry System"}</span>
-                <span>{lang === "id" ? "100% Higienis & Rapi" : "100% Hygienic & Crisp"}</span>
+                <p className="reference-login-promise">
+                  - {lang === "id" ? "Bersih, cepat & tepat waktu" : "Clean, fast & on time"}
+                </p>
               </div>
             </div>
           </div>
@@ -237,19 +229,23 @@ export default function Login() {
              ========================================================== */}
           <div className="form-column">
             <div className="login-inner-card">
-              {/* Circular User Icon at Top */}
-              <div className="login-icon-avatar">
-                <CircleUserRound size={28} />
-              </div>
-
-              {/* Title & Tagline */}
-              <h2 className="login-card-title">
-                {lang === "id" ? "Masuk ke Akun" : "Sign In to Account"}
-              </h2>
+              <Image
+                src="/logo.png"
+                alt="Logo SCA Smart Laundry"
+                width={52}
+                height={52}
+                className="reference-login-logo"
+                priority
+              />
+              <span className="admin-pill reference-admin-pill">● Admin</span>
+              <h2 className="login-card-title">SCA Smart Laundry</h2>
+              <p className="auth-tag">
+                {lang === "id" ? "CUCI BERSIH, CEPAT & TEPAT WAKTU" : "CLEAN, FAST & ON TIME"}
+              </p>
               <p className="login-card-subtitle">
                 {lang === "id"
-                  ? "Selamat Datang Kembali! Silahkan masukan akun administrator Anda"
-                  : "Welcome back! Please enter your administrator credentials"}
+                  ? "Selamat Datang Kembali! Silahkan Masukan Akun Anda"
+                  : "Welcome back! Please enter your account details"}
               </p>
 
               {/* Form Element */}
@@ -344,19 +340,18 @@ export default function Login() {
                   )}
                 </button>
 
-                {/* DEMO INFO PILL */}
-                <div className="demo-credentials-pill">
-                  {lang === "id" ? "Testing Default:" : "Default Testing:"}{" "}
-                  <strong>admin</strong> / <strong>admin123</strong>
-                </div>
-
                 {/* OR DIVIDER */}
                 <div className="divider-or">
                   <span>{lang === "id" ? "Atau Masuk Dengan" : "Or Sign In With"}</span>
                 </div>
 
                 {/* GOOGLE SIGN IN (Kotak Tumpul / Rounded Rect) */}
-                <button type="button" className="google-sign-btn">
+                <button
+                  type="button"
+                  className="google-sign-btn"
+                  onClick={handleGoogleSignIn}
+                  disabled={loading || googleLoading}
+                >
                   <svg className="google-svg" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       fill="#4285F4"
@@ -376,7 +371,13 @@ export default function Login() {
                     />
                   </svg>
                   <span>
-                    {lang === "id" ? "Masuk dengan Google" : "Sign in with Google"}
+                    {googleLoading
+                      ? lang === "id"
+                        ? "Menghubungkan..."
+                        : "Connecting..."
+                      : lang === "id"
+                        ? "Masuk dengan Google"
+                        : "Sign in with Google"}
                   </span>
                 </button>
               </form>

@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+<<<<<<< HEAD
 import { LogOut, Check, Loader2 } from "lucide-react";
+=======
+import { Check, LogOut, Loader2 } from "lucide-react";
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
 
 export default function Logout() {
   const [status, setStatus] = useState<"processing" | "success">("processing");
@@ -76,7 +80,11 @@ export default function Logout() {
         ) : (
           <div className="logout-card logout-card--success" role="status" aria-live="polite">
             <div className="success-circle logout-circle-success" aria-hidden="true">
+<<<<<<< HEAD
               <Check size={64} strokeWidth={2.6} className="logout-check-icon" />
+=======
+              <Check className="logout-success-check" size={48} strokeWidth={3} />
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
             </div>
 
             <h2>LOG OUT BERHASIL!</h2>

@@ -1047,6 +1047,12 @@ td {
   font-weight: 600;
 }
 
+.order-delete-row {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .table-wrap td > strong,
 .table-wrap td > small {
   display: block;
@@ -2599,6 +2605,16 @@ td:first-child {
   box-shadow: 0 0 0 6px #d1fadf, 0 8px 24px rgba(18, 183, 106, 0.25);
   margin-bottom: 22px;
   animation: successBounce 0.5s var(--ease-spring) both;
+}
+
+.logout-success-check path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: logoutCheckDraw 0.45s ease-out 0.2s forwards;
+}
+
+@keyframes logoutCheckDraw {
+  to { stroke-dashoffset: 0; }
 }
 
 @keyframes successBounce {
@@ -5644,6 +5660,7 @@ thead tr {
   }
 }
 
+<<<<<<< HEAD
 .payment-action-group .danger-button {
   min-height: 36px;
   background: #ffffff;
@@ -5743,10 +5760,59 @@ thead tr {
 .om-btn-delete-card:hover { background: #fff5f5; border-color: #f87171; box-shadow: 0 5px 14px rgba(220,38,38,.1); }
 .om-btn-delete-card:active { background: #fee2e2; }
 
+=======
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
 /* Badge jumlah pada ikon notifikasi header */
 .header-notification-link { position: relative; display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
 .header-notification-badge { position: absolute; top: -7px; right: -7px; min-width: 16px; height: 16px; padding: 0 4px; border: 1.5px solid #fff; border-radius: 999px; background: #dc2626; color: #fff; display: grid; place-items: center; font-size: 9px; font-weight: 700; line-height: 1; box-shadow: 0 1px 4px rgba(220,38,38,.22); }
 .header-account .header-notification-badge { display: grid; font-size: 9px; line-height: 1; }
+<<<<<<< HEAD
+=======
+/* Ukuran aksi pembayaran disamakan dengan kotak pencarian */
+.payment-action-group .secondary-button {
+  height: 46px;
+  min-height: 46px;
+}
+
+/* Ukuran toolbar promo disamakan dengan kotak pencarian */
+.promo-toolbar {
+  align-items: center;
+  gap: 12px;
+}
+
+.promo-toolbar .search-box {
+  height: 46px;
+}
+
+.promo-toolbar .button-group {
+  height: 46px;
+  flex: none;
+}
+
+.promo-toolbar .secondary-button {
+  height: 46px;
+  min-height: 46px;
+  min-width: 205px;
+  padding: 0 20px;
+}
+
+@media (max-width: 900px) {
+  .promo-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .promo-toolbar .button-group {
+    width: 100%;
+    height: auto;
+  }
+
+  .promo-toolbar .secondary-button {
+    flex: 1;
+    min-width: 0;
+  }
+}
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
 
 /* Keep summary cards and data tables consistent across admin pages. */
 .stat-card,
@@ -6183,5 +6249,332 @@ thead tr {
 
   .login-form-panel .auth-or {
     margin: 12px 0 10px;
+<<<<<<< HEAD
+=======
+  }
+}
+
+.riskora-layout-page {
+  height: 100dvh;
+  min-height: 0;
+  max-height: none;
+  padding: 32px;
+  overflow: auto;
+  background: #f7f8fc;
+}
+
+.riskora-container-card {
+  width: min(100%, 1200px);
+  height: min(880px, calc(100dvh - 64px));
+  max-height: none;
+  min-height: 460px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dce1ea;
+  border-radius: 42px;
+  box-shadow: none;
+}
+
+.riskora-top-nav {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.riskora-top-nav .nav-brand-group {
+  display: none;
+}
+
+.riskora-top-nav .nav-pill-btn {
+  padding: 4px 8px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 10px;
+}
+
+.riskora-split-body {
+  height: 100%;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 0;
+}
+
+.preview-column {
+  min-width: 0;
+}
+
+.laundry-bubble-panel {
+  justify-content: center;
+  gap: 0;
+  padding: clamp(28px, 5vw, 64px);
+  border: 0;
+  border-radius: 0;
+  background: #eaf0ff;
+  box-shadow: none;
+}
+
+.reference-login-illustration {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 48%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.bubble-panel-center {
+  width: 100%;
+  margin: 0;
+}
+
+.bubble-hero-title {
+  margin: 0 0 12px;
+  color: #2026ae;
+  font-size: clamp(17px, 1.5vw, 22px);
+  line-height: 1.1;
+  letter-spacing: 1px;
+}
+
+.bubble-hero-title span {
+  color: inherit;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.reference-login-heading {
+  margin: 0 0 8px;
+  color: #17213a;
+  font-size: clamp(17px, 1.6vw, 22px);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.bubble-hero-desc {
+  max-width: 390px;
+  margin: 0;
+  color: #5e687d;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.reference-login-promise {
+  margin: 10px 0 0;
+  color: #34425e;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.form-column {
+  min-width: 0;
+  padding: clamp(28px, 6vw, 88px);
+  background: #fff;
+}
+
+.login-inner-card {
+  max-width: 440px;
+  padding: 20px 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.reference-login-logo {
+  display: block;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 6px;
+  object-fit: contain;
+}
+
+.reference-admin-pill {
+  height: 24px;
+  margin-bottom: 5px;
+  padding: 0 20px;
+  border-radius: 5px;
+  font-size: 11px;
+  line-height: 24px;
+}
+
+.login-card-title {
+  margin: 0 0 2px;
+  color: #101828;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.login-inner-card .auth-tag {
+  margin: 0 0 4px;
+  font-size: 9px;
+  letter-spacing: 0.7px;
+}
+
+.login-card-subtitle {
+  margin: 0 0 18px;
+  color: #667085;
+  font-size: 11px;
+}
+
+.login-inner-card .form-group {
+  margin-bottom: 10px;
+}
+
+.login-inner-card .form-group label {
+  margin-bottom: 5px;
+  color: #344054;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.login-inner-card .input-wrap {
+  height: 40px;
+  border-color: #6978e8;
+  border-radius: 6px;
+  background: #f9faff;
+}
+
+.login-inner-card .input-wrap input::placeholder {
+  color: #a4acc0;
+}
+
+.login-inner-card .forgot-pass-wrap {
+  margin: -4px 0 14px;
+}
+
+.login-inner-card .login-submit-btn {
+  height: 40px;
+  border-radius: 6px;
+  background: #2026ae;
+  box-shadow: none;
+  font-size: 12px;
+}
+
+.login-inner-card .login-submit-btn:hover {
+  background: #171d96;
+  box-shadow: none;
+}
+
+.login-inner-card .divider-or {
+  margin: 12px 0 8px;
+}
+
+.login-inner-card .google-sign-btn {
+  height: 36px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+  font-size: 11px;
+}
+
+.login-inner-card .google-sign-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+@media (max-width: 760px) {
+  .riskora-layout-page {
+    height: auto;
+    min-height: 100dvh;
+    padding: 12px;
+  }
+
+  .riskora-container-card {
+    width: 100%;
+    height: auto;
+    min-height: calc(100dvh - 24px);
+    overflow: hidden;
+    border-radius: 28px;
+  }
+
+  .riskora-top-nav {
+    top: 8px;
+    right: 10px;
+  }
+
+  .riskora-top-nav .nav-actions-group {
+    gap: 0;
+  }
+
+  .riskora-top-nav .nav-pill-btn {
+    padding: 4px 6px;
+    font-size: 9px;
+  }
+
+  .riskora-split-body {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .preview-column {
+    display: flex;
+    min-height: 290px;
+  }
+
+  .laundry-bubble-panel {
+    min-height: 290px;
+    padding: 34px 24px 24px;
+  }
+
+  .reference-login-illustration {
+    width: min(100%, 420px);
+    max-height: 155px;
+  }
+
+  .bubble-panel-center {
+    margin-top: 8px;
+  }
+
+  .bubble-hero-title {
+    margin-bottom: 8px;
+    font-size: 17px;
+  }
+
+  .reference-login-heading {
+    margin-bottom: 4px;
+    font-size: 17px;
+  }
+
+  .bubble-hero-desc {
+    font-size: 11px;
+  }
+
+  .reference-login-promise {
+    margin-top: 6px;
+    font-size: 10px;
+  }
+
+  .form-column {
+    padding: 18px 26px 26px;
+  }
+
+  .login-inner-card {
+    padding: 10px 0;
+  }
+
+  .login-card-subtitle {
+    margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .riskora-top-nav .nav-pill-btn {
+    gap: 3px;
+    padding: 4px;
+    font-size: 8px;
+  }
+
+  .laundry-bubble-panel {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .form-column {
+    padding-right: 18px;
+    padding-left: 18px;
+>>>>>>> 3f762c4 (alhamdulilah revisi kelar)
   }
 }
