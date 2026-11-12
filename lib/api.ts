@@ -4,17 +4,29 @@
  */
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
 
 const TOKEN_KEY = "sca_auth_token";
 const USER_KEY = "sca_auth_user";
 
+export function normalizeBackendError(message?: string | null): string {
+  const rawMessage = message?.trim();
+  if (!rawMessage) return "Backend belum dapat memproses permintaan.";
+  if (/ECONNREFUSED|Failed to fetch|fetch failed|NetworkError|TypeError/i.test(rawMessage)) {
+    return `Tidak dapat terhubung ke backend di ${API_BASE_URL}. Pastikan API aktif dan CORS mengizinkan frontend.`;
+  }
+  if (/doesn't exist|unknown table|no such table/i.test(rawMessage)) {
+    return "Tabel database belum tersedia. Jalankan migrasi database backend terlebih dahulu.";
+  }
+  return rawMessage;
+}
+
 // Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data: T;
-  meta?: any;
+  errors?: unknown;
 }
 
 export interface UserProfile {
@@ -35,6 +47,17 @@ export interface LoginResponseData {
 
 export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly data: unknown,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
 }
 
 // Token & Session Storage Helpers (Client-side safe)
@@ -60,6 +83,11 @@ export const setAuthSession = (token: string, user: UserProfile): void => {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
+export const setAuthUser = (user: UserProfile): void => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+};
+
 export const clearAuthSession = (): void => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
@@ -73,7 +101,7 @@ export const isAuthenticated = (): boolean => {
 /**
  * Core HTTP Request Wrapper using native fetch
  */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
@@ -81,96 +109,90 @@ export async function apiRequest<T = any>(
 
   // Build full URL
   const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  let url = `${API_BASE_URL}${normalizedEndpoint}`;
+  const url = new URL(`${API_BASE_URL}${normalizedEndpoint}`);
 
   if (params) {
-    const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
       if (val !== undefined && val !== null && val !== "") {
-        searchParams.append(key, String(val));
+        url.searchParams.set(key, String(val));
       }
     });
-    const queryString = searchParams.toString();
-    if (queryString) {
-      url += (url.includes("?") ? "&" : "?") + queryString;
-    }
   }
 
   // Build headers
   const token = getAuthToken();
-  const requestHeaders: Record<string, string> = {
-    Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
+  const requestHeaders = new Headers(headers);
+  requestHeaders.set("Accept", "application/json");
+  if (token) requestHeaders.set("Authorization", `Bearer ${token}`);
 
-  // If body is not FormData, default to application/json
-  if (restOptions.body && !(restOptions.body instanceof FormData)) {
-    requestHeaders["Content-Type"] = "application/json";
+  if (
+    restOptions.body &&
+    typeof FormData !== "undefined" &&
+    !(restOptions.body instanceof FormData)
+  ) {
+    requestHeaders.set("Content-Type", "application/json");
   }
-
-  // Merge headers
-  const mergedHeaders = {
-    ...requestHeaders,
-    ...(headers as Record<string, string> || {}),
-  };
 
   try {
     const response = await fetch(url, {
       ...restOptions,
-      headers: mergedHeaders,
+      headers: requestHeaders,
     });
 
     const contentType = response.headers.get("content-type");
-    let result: any = null;
-
-    if (contentType && contentType.includes("application/json")) {
-      result = await response.json();
-    } else {
-      const text = await response.text();
-      result = { success: response.ok, message: text, data: null };
-    }
+    const result: unknown = contentType?.includes("application/json")
+      ? await response.json()
+      : await response.text();
 
     if (!response.ok) {
-      const errorMessage =
-        result?.message || `HTTP Error ${response.status}: ${response.statusText}`;
-      const error: any = new Error(errorMessage);
-      error.status = response.status;
-      error.data = result;
-      throw error;
+      const apiResult = result && typeof result === "object"
+        ? result as { message?: unknown }
+        : null;
+      throw new ApiError(
+        typeof apiResult?.message === "string"
+          ? apiResult.message
+          : `HTTP Error ${response.status}: ${response.statusText}`,
+        response.status,
+        result,
+      );
+    }
+
+    if (!result || typeof result !== "object" || !("success" in result)) {
+      throw new Error("Respons backend tidak sesuai format API.");
     }
 
     return result as ApiResponse<T>;
-  } catch (err: any) {
-    // If it's network/CORS error
-    if (err.name === "TypeError" && err.message.includes("fetch")) {
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof TypeError) {
       throw new Error(
-        "Gagal terhubung ke server backend. Pastikan server backend sedang berjalan di http://localhost:5000"
+        `Gagal terhubung ke backend di ${API_BASE_URL}. Pastikan backend aktif dan CORS mengizinkan origin frontend.`,
       );
     }
-    throw err;
+    throw error;
   }
 }
 
 // REST methods helpers
 export const api = {
-  get: <T = any>(endpoint: string, options?: RequestOptions) =>
+  get: <T = unknown>(endpoint: string, options?: RequestOptions) =>
     apiRequest<T>(endpoint, { ...options, method: "GET" }),
 
-  post: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+  post: <T = unknown>(endpoint: string, body?: unknown, options?: RequestOptions) =>
     apiRequest<T>(endpoint, {
       ...options,
       method: "POST",
       body: body instanceof FormData ? body : JSON.stringify(body),
     }),
 
-  put: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+  put: <T = unknown>(endpoint: string, body?: unknown, options?: RequestOptions) =>
     apiRequest<T>(endpoint, {
       ...options,
       method: "PUT",
       body: body instanceof FormData ? body : JSON.stringify(body),
     }),
 
-  patch: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+  patch: <T = unknown>(endpoint: string, body?: unknown, options?: RequestOptions) =>
     apiRequest<T>(endpoint, {
       ...options,
       method: "PATCH",
@@ -224,7 +246,7 @@ export const authApi = {
   },
 
   checkHealth: async () => {
-    return api.get("/health");
+    return api.get<{ status: string }>("/health");
   },
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Header from "@/components/Header";
 import {
   StatCard,
@@ -11,8 +11,9 @@ import {
   EmptyTable,
   Pagination,
 } from "@/components/UI";
-import { AlertCircle, FileDown, Plus, ReceiptText, X } from "lucide-react";
-import { DUMMY_SERVICES, type DummyService } from "@/lib/dummyData";
+import { AlertCircle, ClipboardList, Clock3, Coins, FileDown, Plus, ReceiptText, Trash2, WashingMachine, X } from "lucide-react";
+import { api } from "@/lib/api";
+import type { DummyService } from "@/lib/dummyData";
 
 const SERVICE_PILLS = [
   "Semua Layanan",
@@ -31,6 +32,16 @@ interface ServiceModalProps {
 
 function ServiceModal({ onClose, onSubmit }: ServiceModalProps) {
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ServiceField, string>>>({});
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   function validateField(field: ServiceField, value: string) {
     setFieldErrors((current) => ({
@@ -55,61 +66,79 @@ function ServiceModal({ onClose, onSubmit }: ServiceModalProps) {
 
   function fieldError(field: ServiceField) {
     return fieldErrors[field] ? (
-      <small className="promo-field-error"><AlertCircle size={13} />{fieldErrors[field]}</small>
+      <small className="om-field-error"><AlertCircle size={13} />{fieldErrors[field]}</small>
     ) : null;
   }
 
   return (
-    <div className="promo-modal-overlay" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose();
-    }}>
-      <section className="promo-modal service-card-modal" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
-        <header className="promo-modal-header">
-          <div className="promo-modal-icon"><ReceiptText size={22} /></div>
-          <div>
+    <div
+      className={`om-overlay${visible ? " om-overlay--open" : ""}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section className={`om-card${visible ? " om-card--open" : ""}`} role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+        <header className="om-header">
+          <div className="om-header-icon"><ReceiptText size={22} /></div>
+          <div className="om-header-copy">
             <h2 id="service-modal-title">Tambah Layanan</h2>
             <p>Lengkapi detail layanan dan tarif laundry.</p>
           </div>
-          <button type="button" className="promo-modal-close" aria-label="Tutup" onClick={onClose}>
+          <button type="button" className="om-close" aria-label="Tutup" onClick={onClose}>
             <X size={20} />
           </button>
         </header>
-        <form className="promo-modal-form" onSubmit={handleSubmit} noValidate>
-          <div className="promo-modal-row">
-            <label>
-              Nama Layanan
-              <input name="name" required maxLength={80} placeholder="Contoh: Cuci Kering Lipat" onChange={(event) => validateField("name", event.currentTarget.value)} />
+        <form className="om-form" onSubmit={handleSubmit} noValidate>
+          <div className="om-row">
+            <div className="om-field om-field--anim" style={{ "--i": 0 } as React.CSSProperties}>
+              <label htmlFor="service-name">Nama Layanan</label>
+              <div className="om-input-wrap">
+                <span className="om-input-icon"><WashingMachine size={16} /></span>
+                <input id="service-name" name="name" required maxLength={80} placeholder="Contoh: Cuci Kering Lipat" onChange={(event) => validateField("name", event.currentTarget.value)} />
+              </div>
               {fieldError("name")}
-            </label>
-            <label>
-              Kategori
-              <select name="category" defaultValue="Cuci Kiloan">
-                {SERVICE_PILLS.slice(1).map((category) => <option key={category}>{category}</option>)}
-              </select>
-            </label>
+            </div>
+            <div className="om-field om-field--anim" style={{ "--i": 1 } as React.CSSProperties}>
+              <label htmlFor="service-category">Kategori</label>
+              <div className="om-input-wrap om-select-wrap">
+                <span className="om-input-icon"><ClipboardList size={16} /></span>
+                <select id="service-category" name="category" defaultValue="Cuci Kiloan">
+                  {SERVICE_PILLS.slice(1).map((category) => <option key={category}>{category}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
-          <div className="promo-modal-row">
-            <label>
-              Estimasi Waktu
-              <input name="estimatedTime" required maxLength={40} placeholder="Contoh: 24 Jam" onChange={(event) => validateField("estimatedTime", event.currentTarget.value)} />
+          <div className="om-row">
+            <div className="om-field om-field--anim" style={{ "--i": 2 } as React.CSSProperties}>
+              <label htmlFor="service-estimated-time">Estimasi Waktu</label>
+              <div className="om-input-wrap">
+                <span className="om-input-icon"><Clock3 size={16} /></span>
+                <input id="service-estimated-time" name="estimatedTime" required maxLength={40} placeholder="Contoh: 24 Jam" onChange={(event) => validateField("estimatedTime", event.currentTarget.value)} />
+              </div>
               {fieldError("estimatedTime")}
-            </label>
-            <label>
-              Tarif
-              <input name="price" required maxLength={40} placeholder="Contoh: Rp 9.500 / kg" onChange={(event) => validateField("price", event.currentTarget.value)} />
+            </div>
+            <div className="om-field om-field--anim" style={{ "--i": 3 } as React.CSSProperties}>
+              <label htmlFor="service-price">Tarif</label>
+              <div className="om-input-wrap">
+                <span className="om-input-icon"><Coins size={16} /></span>
+                <input id="service-price" name="price" required maxLength={40} placeholder="Contoh: Rp 9.500 / kg" onChange={(event) => validateField("price", event.currentTarget.value)} />
+              </div>
               {fieldError("price")}
-            </label>
+            </div>
           </div>
-          <label>
-            Status
-            <select name="status" defaultValue="Aktif">
-              <option value="Aktif">Aktif</option>
-              <option value="Non Aktif">Non Aktif</option>
-            </select>
-          </label>
-          <div className="promo-modal-actions">
-            <button type="button" className="promo-modal-cancel" onClick={onClose}>Batal</button>
-            <button type="submit" className="promo-modal-submit">Simpan Layanan</button>
+          <div className="om-field om-field--anim" style={{ "--i": 4 } as React.CSSProperties}>
+            <label htmlFor="service-status">Status</label>
+            <div className="om-input-wrap om-select-wrap">
+              <span className="om-input-icon"><ClipboardList size={16} /></span>
+              <select id="service-status" name="status" defaultValue="Aktif">
+                <option value="Aktif">Aktif</option>
+                <option value="Non Aktif">Non Aktif</option>
+              </select>
+            </div>
+          </div>
+          <div className="om-actions">
+            <button type="button" className="om-btn-cancel" onClick={onClose}>Batal</button>
+            <button type="submit" className="om-btn-submit">Simpan Layanan</button>
           </div>
         </form>
       </section>
@@ -125,9 +154,46 @@ export default function LayananHarga() {
   const [search, setSearch] = useState("");
   const [selectedPill, setSelectedPill] = useState("Semua Layanan");
   const [page, setPage] = useState(1);
-  const [services, setServices] = useState<DummyService[]>(DUMMY_SERVICES);
+  const [services, setServices] = useState<DummyService[]>([]);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [serviceStats, setServiceStats] = useState<{
+    totalActiveServices: { value: string; note: string };
+    categoriesCount: { value: string; note: string };
+    avgKiloanPrice: { value: string; note: string };
+    bestSellerService: { value: string; note: string };
+  } | null>(null);
   const perPage = 5;
+
+  async function loadServices() {
+    try {
+      const [response, statsResponse] = await Promise.all([api.get<Array<{
+        id: string;
+        name: string;
+        category: string;
+        price: number;
+        unit: string;
+        estimatedHours: number;
+        isActive: boolean;
+      }>>("/services"), api.get<typeof serviceStats>("/services/stats")]);
+      setServices(response.data.map((service) => ({
+        id: service.id,
+        name: service.name,
+        category: service.category === "Kiloan" ? "Cuci Kiloan"
+          : service.category === "Satuan" ? "Cuci Satuan"
+            : service.category as DummyService["category"],
+        estimatedTime: `${service.estimatedHours} Jam`,
+        price: `Rp ${service.price.toLocaleString("id-ID")} / ${service.unit}`,
+        status: service.isActive ? "Aktif" : "Non Aktif",
+      })));
+      setServiceStats(statsResponse.data);
+      setError("");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Gagal memuat layanan.");
+    }
+  }
+
+  useEffect(() => { void loadServices(); }, []);
 
   const filteredServices = services.filter((service) => {
     const q = search.trim().toLowerCase();
@@ -173,22 +239,57 @@ export default function LayananHarga() {
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  function addService(event: FormEvent<HTMLFormElement>) {
+  async function addService(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const newService: DummyService = {
-      id: `srv-${Date.now()}`,
-      name: String(formData.get("name") ?? "").trim(),
-      category: String(formData.get("category") ?? "Cuci Kiloan") as DummyService["category"],
-      estimatedTime: String(formData.get("estimatedTime") ?? "").trim(),
-      price: String(formData.get("price") ?? "").trim(),
-      status: formData.get("status") === "Non Aktif" ? "Non Aktif" : "Aktif",
-    };
-    setServices((current) => [newService, ...current]);
-    setSearch("");
-    setSelectedPill("Semua Layanan");
-    setPage(1);
-    setIsServiceModalOpen(false);
+    const rawPrice = String(formData.get("price") ?? "");
+    const parsedPrice = Number(rawPrice.replace(/[^\d]/g, ""));
+    const rawHours = String(formData.get("estimatedTime") ?? "");
+    const estimatedHours = Number(rawHours.match(/\d+/)?.[0]);
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0 || !estimatedHours || estimatedHours > 720) {
+      setError("Harga harus berupa nominal Rupiah dan estimasi waktu harus 1–720 jam.");
+      return;
+    }
+    const category = String(formData.get("category") ?? "Kiloan")
+      .replace("Cuci ", "");
+    try {
+      const created = await api.post<{ id: string }>("/services", {
+        name: String(formData.get("name") ?? "").trim(),
+        category,
+        price: parsedPrice,
+        unit: category === "Kiloan" || category === "Express" ? "kg" : "pcs",
+        estimatedHours,
+      });
+      if (formData.get("status") === "Non Aktif") {
+        await api.put(`/services/${encodeURIComponent(created.data.id)}`, { isActive: false });
+      }
+      await loadServices();
+      setSearch("");
+      setSelectedPill("Semua Layanan");
+      setPage(1);
+      setIsServiceModalOpen(false);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Layanan gagal disimpan.");
+    }
+  }
+
+  async function toggleService(service: DummyService) {
+    try {
+      await api.put(`/services/${encodeURIComponent(service.id)}`, { isActive: service.status !== "Aktif" });
+      await loadServices();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Status layanan gagal diperbarui.");
+    }
+  }
+
+  async function deleteService(service: DummyService) {
+    if (!window.confirm(`Hapus layanan "${service.name}"?`)) return;
+    try {
+      await api.delete(`/services/${encodeURIComponent(service.id)}`);
+      await loadServices();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Layanan gagal dihapus.");
+    }
   }
 
   return (
@@ -199,30 +300,31 @@ export default function LayananHarga() {
       />
 
       <section className="content">
+        {error && <p className="order-error" role="alert">{error}</p>}
         {/* STATISTIK LAYANAN */}
         <div className="service-stat-grid">
           <StatCard
             label={<>TOTAL LAYANAN<br />AKTIF</>}
-            value="16 Layanan"
-            note="+2 bulan ini"
+            value={serviceStats?.totalActiveServices.value ?? "—"}
+            note={serviceStats?.totalActiveServices.note ?? ""}
             icon="hand"
           />
           <StatCard
             label={<>KATEGORI<br />LAYANAN</>}
-            value="4 Kategori"
-            note="Kiloan, Satuan, Express, Khusus"
+            value={serviceStats?.categoriesCount.value ?? "—"}
+            note={serviceStats?.categoriesCount.note ?? ""}
             icon="wash"
           />
           <StatCard
             label={<>RATA-RATA TARIF<br />KILOAN</>}
-            value="Rp 9.500/kg"
-            note="Standar Harga SCA Smart Laundry"
+            value={serviceStats?.avgKiloanPrice.value ?? "—"}
+            note={serviceStats?.avgKiloanPrice.note ?? ""}
             icon="dollar"
           />
           <StatCard
             label={<>LAYANAN<br />TERLARIS</>}
-            value={<>Cuci Kering<br />Setrika</>}
-            note="68% Total Order Masuk"
+            value={serviceStats?.bestSellerService.value ?? "—"}
+            note={serviceStats?.bestSellerService.note ?? ""}
             icon="shirt"
           />
         </div>
@@ -259,6 +361,7 @@ export default function LayananHarga() {
             "ESTIMASI WAKTU",
             "TARIF/HARGA",
             "STATUS",
+            "AKSI",
           ]}
           rows={0}
         >
@@ -292,15 +395,31 @@ export default function LayananHarga() {
                   </strong>
                 </td>
                 <td>
-                  <span className={`status ${service.status.toLowerCase().replaceAll(" ", "-")}`}>
+                  <button
+                    type="button"
+                    className={`status ${service.status.toLowerCase().replaceAll(" ", "-")}`}
+                    onClick={() => void toggleService(service)}
+                    aria-label={`${service.status === "Aktif" ? "Nonaktifkan" : "Aktifkan"} ${service.name}`}
+                  >
                     {service.status}
-                  </span>
+                  </button>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="order-delete-button order-delete-row"
+                    onClick={() => void deleteService(service)}
+                    aria-label={`Hapus layanan ${service.name}`}
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
+              <td colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
                 Tidak ada layanan yang sesuai pencarian.
               </td>
             </tr>

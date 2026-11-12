@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import { StatCard, SearchBox, SecondaryButton, Pills, EmptyTable, Pagination } from "@/components/UI";
 import { CalendarDays, Download, ChevronLeft, ChevronRight, X } from "lucide-react";
+import api from "@/lib/api";
 
 /* ─── helpers ─── */
 const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -28,9 +29,10 @@ function fmt(d: Date | null) {
 interface CalendarPopupProps {
   anchorRef: React.RefObject<HTMLDivElement | null>;
   onClose: () => void;
+  onApply: (start: Date | null, end: Date | null) => void;
 }
 
-function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
+function CalendarPopup({ anchorRef, onClose, onApply }: CalendarPopupProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -157,7 +159,15 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
           </div>
           <div className="cal-footer-actions">
             <button type="button" className="cal-btn-cancel" onClick={onClose}>Batal</button>
-            <button type="button" className="cal-btn-apply" disabled={!start} onClick={onClose}>
+            <button
+              type="button"
+              className="cal-btn-apply"
+              disabled={!start}
+              onClick={() => {
+                onApply(start, end ?? start);
+                onClose();
+              }}
+            >
               Terapkan
             </button>
           </div>
@@ -170,8 +180,6 @@ function CalendarPopup({ anchorRef, onClose }: CalendarPopupProps) {
   );
 }
 
-import { DUMMY_TRANSACTIONS, type DummyTransaction } from "@/lib/dummyData";
-
 function formatRupiah(amount: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -183,20 +191,23 @@ function formatRupiah(amount: number) {
 const TX_PILLS = ["Semua", "Menunggu Pembayaran", "Lunas", "Dibatalkan"];
 
 /* ─── REVENUE CHART ─── */
-const CHART_DATA = [
-  { label: "Mei '26",  value: 320000 },
-  { label: "Jun '26",  value: 780000 },
-  { label: "Jul '26",  value: 1250000 },
-  { label: "Agu '26",  value: 950000 },
-  { label: "Sep '26",  value: 1050000 },
-  { label: "Okt '26",  value: 1680000 },
-  { label: "Nov '26",  value: 1580000 },
-];
+interface ChartPoint { label: string; value: number }
+interface AdminTransaction {
+  id: string;
+  orderId: string;
+  date: string;
+  createdAt: string;
+  customer: string;
+  phone: string;
+  paymentMethod: string;
+  total: number;
+  status: string;
+}
 
-function RevenueChart() {
+function RevenueChart({ chartData }: { chartData: ChartPoint[] }) {
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const maxValue = 2000000;
+  const maxValue = Math.max(1, ...chartData.map((point) => point.value));
   const yLabels = ["Rp. 2.000.000", "Rp. 1.500.000", "Rp. 1.000.000", "Rp. 500.000", "Rp. 0"];
 
   /* SVG canvas */
@@ -205,8 +216,8 @@ function RevenueChart() {
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
-  const pts = CHART_DATA.map((d, i) => ({
-    x: padL + (i / (CHART_DATA.length - 1)) * plotW,
+  const pts = chartData.map((d, i) => ({
+    x: padL + (i / Math.max(1, chartData.length - 1)) * plotW,
     y: padT + plotH - (d.value / maxValue) * plotH,
     ...d,
   }));
@@ -223,12 +234,16 @@ function RevenueChart() {
   }
 
   const linePath = smoothLine(pts);
-  const areaPath = `${linePath} L ${pts[pts.length - 1].x} ${H} L ${pts[0].x} ${H} Z`;
+  const firstPoint = pts[0];
+  const lastPoint = pts[pts.length - 1];
+  const areaPath = firstPoint && lastPoint
+    ? `${linePath} L ${lastPoint.x} ${H} L ${firstPoint.x} ${H} Z`
+    : "";
 
   /* dot colour for mid-range (not highest/lowest visible jump) */
   function dotFill(i: number) {
     if (i === 0) return "#4d9d00";
-    const diff = CHART_DATA[i].value - CHART_DATA[i - 1].value;
+    const diff = chartData[i].value - chartData[i - 1].value;
     if (diff > 200000) return "#4d9d00";
     if (diff < -200000) return "#ef4444";
     return "#ff8a65";
@@ -258,18 +273,32 @@ function RevenueChart() {
             </defs>
 
             {/* area fill */}
-            <path d={areaPath} fill="url(#chartAreaGrad)" />
+            {areaPath && <path d={areaPath} fill="url(#chartAreaGrad)" />}
 
             {/* smooth line */}
-            <path
-              className="chart-line"
-              d={linePath}
-              fill="none"
-              stroke="#2531b6"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              pathLength="1"
-            />
+            {linePath && (
+              <path
+                className="chart-line"
+                d={linePath}
+                fill="none"
+                stroke="#2531b6"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                pathLength="1"
+              />
+            )}
+
+            {!pts.length && (
+              <text
+                x={W / 2}
+                y={H / 2}
+                textAnchor="middle"
+                fill="#94a3b8"
+                style={{ fontSize: 12, fontFamily: "inherit" }}
+              >
+                Data pendapatan belum tersedia
+              </text>
+            )}
 
             {/* dots */}
             {pts.map((p, i) => (
@@ -294,7 +323,7 @@ function RevenueChart() {
             ))}
 
             {/* hover vertical line */}
-            {hovered !== null && (
+            {hovered !== null && pts[hovered] && (
               <line
                 x1={pts[hovered].x} y1={padT}
                 x2={pts[hovered].x} y2={H}
@@ -303,7 +332,7 @@ function RevenueChart() {
             )}
 
             {/* tooltip */}
-            {hovered !== null && (() => {
+            {hovered !== null && pts[hovered] && (() => {
               const p = pts[hovered];
               const tw = 148, th = 46;
               let tx = p.x - tw / 2;
@@ -320,11 +349,11 @@ function RevenueChart() {
                   />
                   <text x={tx + tw / 2} y={ty + 17} textAnchor="middle"
                     style={{ fontSize: 11, fill: "#a5b4fc", fontWeight: 500, fontFamily: "inherit" }}>
-                    {CHART_DATA[hovered].label}
+                    {chartData[hovered].label}
                   </text>
                   <text x={tx + tw / 2} y={ty + 36} textAnchor="middle"
                     style={{ fontSize: 13, fill: "#fff", fontWeight: 700, fontFamily: "inherit" }}>
-                    {formatRupiah(CHART_DATA[hovered].value)}
+                    {formatRupiah(chartData[hovered].value)}
                   </text>
                 </g>
               );
@@ -333,7 +362,7 @@ function RevenueChart() {
 
           {/* X-axis labels — rendered as HTML below the SVG */}
           <div className="chart-x-labels">
-            {CHART_DATA.map((d, i) => (
+            {chartData.map((d, i) => (
               <span
                 key={i}
                 className={`chart-x-label${hovered === i ? " chart-x-label--active" : ""}`}
@@ -357,16 +386,51 @@ export default function RiwayatTransaksi() {
   const [selectedPill, setSelectedPill] = useState("Semua");
   const [page, setPage] = useState(1);
   const perPage = 5;
+  const [transactions, setTransactions] = useState<AdminTransaction[]>([]);
+  const [chartData, setChartData] = useState<ChartPoint[]>([]);
+  const [error, setError] = useState("");
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
 
-  const filteredTransactions = DUMMY_TRANSACTIONS.filter((tx) => {
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.get<{ transactions: Array<{ id: string; orderId: string; customer: string; amount: number; paymentStatus: string; paymentMethod: string; date: string }> }>("/transactions", { params: { page: 1, limit: 100 } }),
+      api.get<{ points: Array<{ day: string; value: number }> }>("/transactions/chart"),
+    ]).then(([transactionResponse, chartResponse]) => {
+      if (!active) return;
+      setTransactions(transactionResponse.data.transactions.map((transaction) => ({
+        id: transaction.id,
+        orderId: transaction.orderId,
+        date: new Date(transaction.date).toLocaleString("id-ID"),
+        createdAt: transaction.date,
+        customer: transaction.customer,
+        phone: "",
+        paymentMethod: transaction.paymentMethod,
+        total: transaction.amount,
+        status: transaction.paymentStatus === "Belum Bayar" ? "Menunggu Pembayaran" : transaction.paymentStatus,
+      })));
+      setChartData(chartResponse.data.points.map((point) => ({ label: point.day, value: point.value })));
+    }).catch((requestError: unknown) => {
+      if (active) setError(requestError instanceof Error ? requestError.message : "Gagal memuat transaksi.");
+    });
+    return () => { active = false; };
+  }, []);
+
+  const filteredTransactions = transactions.filter((tx) => {
     const q = search.trim().toLowerCase();
     const matchesSearch = !q || Object.values(tx).some((value) =>
       String(value ?? "").toLowerCase().includes(q),
     );
 
     if (!matchesSearch) return false;
-    if (selectedPill === "Semua") return true;
-    return tx.status.toLowerCase() === selectedPill.toLowerCase();
+    const matchesStatus = selectedPill === "Semua" ||
+      tx.status.toLowerCase() === selectedPill.toLowerCase();
+    const transactionDate = new Date(tx.createdAt);
+    const matchesDate = !dateRange || (
+      transactionDate >= new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate()) &&
+      transactionDate < new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate() + 1)
+    );
+    return matchesStatus && matchesDate;
   });
 
   const visibleTransactions = filteredTransactions.slice((page - 1) * perPage, page * perPage);
@@ -397,18 +461,19 @@ export default function RiwayatTransaksi() {
 
   const txPillItems = TX_PILLS.map((filter) => {
     const count = filter === "Semua"
-      ? DUMMY_TRANSACTIONS.length
-      : DUMMY_TRANSACTIONS.filter((tx) => tx.status.toLowerCase() === filter.toLowerCase()).length;
+      ? transactions.length
+      : transactions.filter((tx) => tx.status.toLowerCase() === filter.toLowerCase()).length;
     return `${filter} (${count})`;
   });
 
   return <>
     <Header title="Riwayat Transaksi" subtitle="Rekap lengkap arus kas, metode pembayaran, dan log transaksi pelanggan."/>
     <section className="content history-content">
+      {error && <p className="order-error" role="alert">{error}</p>}
       <div className="stat-grid history-stats">
-        <StatCard label="TOTAL OMSET BULAN INI" value="Rp. 489.000" icon="hand"/>
-        <StatCard label="TRANSAKSI BULAN INI" value="1.287 Transaksi" icon="receipt"/>
-        <StatCard label="TRANSAKSI PENDAPATAN TERBESAR" value="Rp. 360.000" icon="dollar"/>
+        <StatCard label="TOTAL OMSET 7 HARI" value={formatRupiah(chartData.reduce((sum, point) => sum + point.value, 0))} icon="hand"/>
+        <StatCard label="TRANSAKSI" value={`${transactions.length} Transaksi`} icon="receipt"/>
+        <StatCard label="PENDAPATAN TERBESAR HARIAN" value={formatRupiah(Math.max(0, ...chartData.map((point) => point.value)))} icon="dollar"/>
       </div>
 
       <div className="toolbar history-toolbar" style={{ position: "relative" }}>
@@ -432,7 +497,11 @@ export default function RiwayatTransaksi() {
             TANGGAL
           </SecondaryButton>
           {calOpen && (
-            <CalendarPopup anchorRef={calendarAnchorRef} onClose={closeCalendar} />
+            <CalendarPopup
+              anchorRef={calendarAnchorRef}
+              onClose={closeCalendar}
+              onApply={(start, end) => setDateRange(start && end ? { start, end } : null)}
+            />
           )}
         </div>
 
@@ -441,7 +510,7 @@ export default function RiwayatTransaksi() {
         </SecondaryButton>
       </div>
 
-      <RevenueChart />
+      <RevenueChart chartData={chartData} />
 
       <Pills
         items={txPillItems}

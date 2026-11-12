@@ -9,7 +9,8 @@ import {
   EmptyTable,
   Pagination,
 } from "@/components/UI";
-import { Trash2, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import api from "@/lib/api";
 
 const MONTHS = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -36,9 +37,10 @@ function formatDate(date: Date | null) {
 interface PaymentCalendarProps {
   anchorRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
+  onApply: (start: Date | null, end: Date | null) => void;
 }
 
-function PaymentCalendar({ anchorRef, onClose }: PaymentCalendarProps) {
+function PaymentCalendar({ anchorRef, onClose, onApply }: PaymentCalendarProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -163,7 +165,15 @@ function PaymentCalendar({ anchorRef, onClose }: PaymentCalendarProps) {
           </div>
           <div className="cal-footer-actions">
             <button type="button" className="cal-btn-cancel" onClick={onClose}>Batal</button>
-            <button type="button" className="cal-btn-apply" disabled={!start} onClick={onClose}>
+            <button
+              type="button"
+              className="cal-btn-apply"
+              disabled={!start}
+              onClick={() => {
+                onApply(start, end ?? start);
+                onClose();
+              }}
+            >
               Terapkan
             </button>
           </div>
@@ -176,8 +186,6 @@ function PaymentCalendar({ anchorRef, onClose }: PaymentCalendarProps) {
   );
 }
 
-import { DUMMY_PAYMENTS, type DummyPayment } from "@/lib/dummyData";
-
 function formatRupiah(amount: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -186,7 +194,19 @@ function formatRupiah(amount: number) {
   }).format(amount);
 }
 
-const PAYMENT_PILLS = ["Semua", "Menunggu Pembayaran", "Sudah Dibayar", "Selesai"];
+const PAYMENT_PILLS = ["Semua", "Menunggu Pembayaran", "Lunas", "Gagal"];
+
+interface PaymentRow {
+  id: string;
+  orderId: string;
+  customer: string;
+  phone: string;
+  total: number;
+  status: string;
+  paymentMethod: string;
+  paidAt?: string;
+  createdAt: string;
+}
 
 export default function Pembayaran() {
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -194,8 +214,37 @@ export default function Pembayaran() {
   const [search, setSearch] = useState("");
   const [selectedPill, setSelectedPill] = useState("Semua");
   const [page, setPage] = useState(1);
-  const [payments, setPayments] = useState<DummyPayment[]>(DUMMY_PAYMENTS);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [stats, setStats] = useState<{ totalRevenue: number; paidCount: number; pendingCount: number } | null>(null);
+  const [error, setError] = useState("");
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [updatingPaymentId, setUpdatingPaymentId] = useState("");
   const perPage = 5;
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.get<{ payments: Array<{ id: string; orderId: string; customer: string; phone: string; amount: number; status: string; method: string; paidAt: string | null; createdAt: string }> }>("/payments", { params: { page: 1, limit: 100 } }),
+      api.get<typeof stats>("/payments/stats"),
+    ]).then(([paymentResponse, statsResponse]) => {
+      if (!active) return;
+      setPayments(paymentResponse.data.payments.map((payment) => ({
+          id: payment.id,
+          orderId: payment.orderId,
+          customer: payment.customer,
+          phone: payment.phone,
+          total: payment.amount,
+          status: payment.status === "Belum Bayar" ? "Menunggu Pembayaran" : payment.status,
+          paymentMethod: payment.method,
+          paidAt: payment.paidAt ?? undefined,
+          createdAt: payment.createdAt,
+      })));
+      setStats(statsResponse.data);
+    }).catch((requestError: unknown) => {
+      if (active) setError(requestError instanceof Error ? requestError.message : "Gagal memuat pembayaran.");
+    });
+    return () => { active = false; };
+  }, []);
 
   const filteredPayments = payments.filter((payment) => {
     const q = search.trim().toLowerCase();
@@ -205,30 +254,42 @@ export default function Pembayaran() {
 
     if (!matchesSearch) return false;
 
-    if (selectedPill === "Semua") return true;
-    if (selectedPill === "Sudah Dibayar") return payment.status === "Lunas";
-    return payment.status.toLowerCase() === selectedPill.toLowerCase();
+    const matchesStatus = selectedPill === "Semua" ||
+      payment.status.toLowerCase() === selectedPill.toLowerCase();
+    const paymentDate = new Date(payment.createdAt);
+    const matchesDate = !dateRange || (
+      paymentDate >= new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate()) &&
+      paymentDate < new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate() + 1)
+    );
+    return matchesStatus && matchesDate;
   });
 
-  function deletePayment(id: string) {
-    const paymentToDelete = payments.find((payment) => payment.id === id);
-    if (!paymentToDelete) return;
-    if (!window.confirm(`Hapus pembayaran ${paymentToDelete.id}? Tindakan ini tidak dapat dibatalkan.`)) return;
-
-    const remainingFilteredCount = filteredPayments.filter((payment) => payment.id !== id).length;
-    setPayments((current) => current.filter((payment) => payment.id !== id));
-    setPage((currentPage) => Math.min(currentPage, Math.max(1, Math.ceil(remainingFilteredCount / perPage))));
+  async function markAsPaid(payment: PaymentRow) {
+    setUpdatingPaymentId(payment.id);
+    try {
+      await api.patch(`/payments/${encodeURIComponent(payment.id)}/status`, { status: "Lunas" });
+      setPayments((current) => current.map((item) => item.id === payment.id
+        ? { ...item, status: "Lunas", paidAt: new Date().toISOString() }
+        : item));
+      setStats((current) => current ? {
+        ...current,
+        paidCount: current.paidCount + 1,
+        pendingCount: Math.max(0, current.pendingCount - 1),
+        totalRevenue: current.totalRevenue + payment.total,
+      } : current);
+      setError("");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Status pembayaran gagal diperbarui.");
+    } finally {
+      setUpdatingPaymentId("");
+    }
   }
 
   const paymentPillItems = PAYMENT_PILLS.map((status) => {
     const count =
       status === "Semua"
         ? payments.length
-        : payments.filter((payment) =>
-            status === "Sudah Dibayar"
-              ? payment.status === "Lunas"
-              : payment.status === status,
-          ).length;
+        : payments.filter((payment) => payment.status === (status === "Menunggu Pembayaran" ? "Menunggu Pembayaran" : status)).length;
     return `${status} (${count})`;
   });
 
@@ -242,18 +303,19 @@ export default function Pembayaran() {
       />
 
       <section className="content payment-content">
+        {error && <p className="order-error" role="alert">{error}</p>}
         <div className="payment-top">
           <StatCard
             label="MENUNGGU PELUNASAN"
-            value="Rp. 100.000"
-            note="2 Order"
+            value={formatRupiah(payments.filter((payment) => payment.status === "Menunggu Pembayaran").reduce((sum, payment) => sum + payment.total, 0))}
+            note={`${stats?.pendingCount ?? 0} Order`}
             icon="clock"
           />
 
           <StatCard
-            label="LUNAS HARI INI"
-            value="Rp. 480.000"
-            note="7 Order"
+            label="TOTAL PEMBAYARAN LUNAS"
+            value={formatRupiah(stats?.totalRevenue ?? 0)}
+            note={`${stats?.paidCount ?? 0} Order`}
             icon="hand"
           />
         </div>
@@ -284,6 +346,7 @@ export default function Pembayaran() {
                 <PaymentCalendar
                   anchorRef={calendarAnchorRef}
                   onClose={() => setCalendarOpen(false)}
+                  onApply={(start, end) => setDateRange(start && end ? { start, end } : null)}
                 />
               )}
             </div>
@@ -317,7 +380,7 @@ export default function Pembayaran() {
               <tr key={p.id}>
                 <td>
                   <strong>{p.orderId}</strong>
-                  <small>{p.paidAt ?? "Menunggu konfirmasi"}</small>
+                  <small>{p.paidAt ? new Date(p.paidAt).toLocaleString("id-ID") : "Menunggu konfirmasi"}</small>
                 </td>
                 <td>
                   <strong>{p.customer}</strong>
@@ -336,15 +399,17 @@ export default function Pembayaran() {
                   <small>{p.id}</small>
                 </td>
                 <td>
-                  <button
-                    className="order-delete-button order-delete-row"
-                    type="button"
-                    aria-label={`Hapus pembayaran ${p.id}`}
-                    onClick={() => deletePayment(p.id)}
-                  >
-                    <Trash2 size={16} />
-                    Delete
-                  </button>
+                  {p.status === "Menunggu Pembayaran" ? (
+                    <button
+                      className="secondary-button payment-mark-paid-button"
+                      type="button"
+                      disabled={updatingPaymentId === p.id}
+                      aria-label={`Verifikasi pembayaran ${p.id}`}
+                      onClick={() => void markAsPaid(p)}
+                    >
+                      {updatingPaymentId === p.id ? "Memproses..." : "Tandai Lunas"}
+                    </button>
+                  ) : <span aria-label="Pembayaran telah diproses">—</span>}
                 </td>
               </tr>
             ))
@@ -367,11 +432,3 @@ export default function Pembayaran() {
     </>
   );
 }
-
-const paymentPillItems = PAYMENT_PILLS.map((filter) => {
-  let count = 0;
-  if (filter === "Semua") count = DUMMY_PAYMENTS.length;
-  else if (filter === "Sudah Dibayar") count = DUMMY_PAYMENTS.filter((payment) => payment.status === "Lunas").length;
-  else count = DUMMY_PAYMENTS.filter((payment) => payment.status.toLowerCase() === filter.toLowerCase()).length;
-  return `${filter} (${count})`;
-});
