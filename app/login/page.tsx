@@ -17,13 +17,13 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
-import { authApi } from "@/lib/api";
+import { authApi, normalizeBackendError } from "@/lib/api";
 import { signIn } from "next-auth/react";
 
 export default function Login() {
   const [show, setShow] = useState(false);
-  const [identifier, setIdentifier] = useState("admin");
-  const [password, setPassword] = useState("admin123");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,8 +85,9 @@ export default function Login() {
         router.push("/dashboard");
       }, 600);
     } catch (err: any) {
+      const backendMessage = err?.message || err?.data?.message || "";
       setError(
-        err?.message ||
+        normalizeBackendError(backendMessage) ||
           (lang === "id"
             ? "Gagal masuk. Periksa kembali username dan password Anda."
             : "Sign in failed. Please verify your username and password.")
@@ -331,12 +332,10 @@ export default function Login() {
                   )}
                 </button>
 
-                {/* OR DIVIDER */}
                 <div className="divider-or">
                   <span>{lang === "id" ? "Atau Masuk Dengan" : "Or Sign In With"}</span>
                 </div>
 
-                {/* GOOGLE SIGN IN (Kotak Tumpul / Rounded Rect) */}
                 <button
                   type="button"
                   className="google-sign-btn"
@@ -371,6 +370,7 @@ export default function Login() {
                         : "Sign in with Google"}
                   </span>
                 </button>
+
               </form>
             </div>
           </div>

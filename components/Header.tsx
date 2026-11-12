@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, CircleUserRound } from "lucide-react";
-import {
-  NOTIFICATIONS_UPDATED_EVENT,
-  readNotifications,
-} from "@/lib/notificationStorage";
+import { api } from "@/lib/api";
 
 interface HeaderProps {
   title?: string;
@@ -18,22 +15,13 @@ export default function Header({ title, subtitle, hide = false }: HeaderProps) {
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
-    const updateNotificationCount = () => {
-      try {
-        setNotificationCount(readNotifications().length);
-      } catch (error) {
-        console.error("Gagal membaca jumlah notifikasi:", error);
-      }
-    };
-
-    updateNotificationCount();
-    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, updateNotificationCount);
-    window.addEventListener("storage", updateNotificationCount);
-
-    return () => {
-      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, updateNotificationCount);
-      window.removeEventListener("storage", updateNotificationCount);
-    };
+    let active = true;
+    api.get<{ notifications: unknown[]; pagination: { total: number } }>("/notifications", { params: { page: 1, limit: 1 } })
+      .then((response) => {
+        if (active) setNotificationCount(response.data.pagination.total);
+      })
+      .catch((error: unknown) => console.error("Gagal memuat jumlah notifikasi:", error));
+    return () => { active = false; };
   }, []);
 
   return (
@@ -57,7 +45,7 @@ export default function Header({ title, subtitle, hide = false }: HeaderProps) {
         </Link>
         <Link href="/profil-admin" className="header-profile-link">
           <CircleUserRound size={28} strokeWidth={1.9} />
-          Admin Laundry
+          Profil Admin
         </Link>
       </div>
     </header>

@@ -11,9 +11,7 @@ import {
   Pagination,
 } from "@/components/UI";
 import api from "@/lib/api";
-import { DUMMY_ORDERS } from "@/lib/dummyData";
 
-const STORAGE_KEY = "sca-smart-laundry-orders";
 const STATUSES = ["Sedang Cuci", "Siap Diambil", "Pengantaran", "Selesai"];
 const ITEMS_PER_PAGE = 5;
 
@@ -28,19 +26,11 @@ interface LaundryOrder {
   createdAt: string;
 }
 
-function isLaundryOrder(value: unknown): value is LaundryOrder {
-  if (!value || typeof value !== "object") return false;
-  const order = value as Partial<LaundryOrder>;
-  return (
-    typeof order.id === "string" &&
-    typeof order.customer === "string" &&
-    typeof order.phone === "string" &&
-    typeof order.service === "string" &&
-    typeof order.weight === "number" &&
-    typeof order.pricePerKg === "number" &&
-    typeof order.status === "string" &&
-    typeof order.createdAt === "string"
-  );
+interface CatalogService {
+  id: string;
+  name: string;
+  price: number;
+  unit: string;
 }
 
 function formatRupiah(amount: number) {
@@ -74,7 +64,7 @@ function normalizeOrderStatus(status: string) {
 
 type AddOrderField = "customer" | "phone" | "service" | "weight" | "pricePerKg";
 
-function getAddOrderFieldError(field: AddOrderField, value: string) {
+function getAddOrderFieldError(field: AddOrderField, value: string, unit = "kg") {
   const trimmedValue = value.trim();
   switch (field) {
     case "customer":
@@ -88,14 +78,15 @@ function getAddOrderFieldError(field: AddOrderField, value: string) {
       if (!/^[0-9]+$/.test(trimmedValue)) return "Nomor telepon hanya boleh berisi angka.";
       return "";
     case "service":
-      if (!trimmedValue) return "Jenis layanan wajib diisi.";
-      if (/[0-9]/.test(trimmedValue)) return "Jenis layanan wajib diisi dengan nama layanan, bukan nomor.";
-      return "";
+      return trimmedValue ? "" : "Jenis layanan wajib dipilih.";
     case "weight": {
       const weight = Number(value);
-      if (!Number.isFinite(weight) || weight < 1) return "Berat minimal 1 kg.";
-      if (Math.abs(weight * 10 - Math.round(weight * 10)) > 1e-8) {
+      if (!Number.isFinite(weight) || weight < 1) return `Jumlah minimal 1 ${unit}.`;
+      if (unit.toLowerCase() === "kg" && Math.abs(weight * 10 - Math.round(weight * 10)) > 1e-8) {
         return "Berat hanya dapat menggunakan satu angka desimal.";
+      }
+      if (unit.toLowerCase() !== "kg" && !Number.isInteger(weight)) {
+        return `Jumlah dalam ${unit} harus berupa bilangan bulat.`;
       }
       return "";
     }
@@ -112,14 +103,25 @@ interface AddOrderModalProps {
   onClose: () => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   formError: string;
+  saving: boolean;
+  services: CatalogService[];
 }
 
-function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
+function AddOrderModal({ onClose, onSubmit, formError, saving, services }: AddOrderModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [weight, setWeight] = useState("1");
-  const [price, setPrice] = useState(9500);
+  const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
+  const selectedService = services.find((service) => service.id === serviceId);
+  const [price, setPrice] = useState(services[0]?.price ?? 9500);
   const [visible, setVisible] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<AddOrderField, string>>>({});
+
+  useEffect(() => {
+    if (!services.some((service) => service.id === serviceId)) {
+      setServiceId(services[0]?.id ?? "");
+      if (services[0]) setPrice(services[0].price);
+    }
+  }, [services, serviceId]);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
@@ -141,8 +143,8 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
     const errors: Partial<Record<AddOrderField, string>> = {
       customer: getAddOrderFieldError("customer", String(formData.get("customer") ?? "")),
       phone: getAddOrderFieldError("phone", String(formData.get("phone") ?? "")),
-      service: getAddOrderFieldError("service", String(formData.get("service") ?? "")),
-      weight: getAddOrderFieldError("weight", String(formData.get("weight") ?? "")),
+      service: getAddOrderFieldError("service", String(formData.get("serviceId") ?? "")),
+      weight: getAddOrderFieldError("weight", String(formData.get("weight") ?? ""), selectedService?.unit),
       pricePerKg: getAddOrderFieldError("pricePerKg", String(formData.get("pricePerKg") ?? "")),
     };
     setFieldErrors(errors);
@@ -265,35 +267,28 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
           <div className="om-row">
             <div className="om-field om-field--anim" style={{ "--i": 2 } as React.CSSProperties}>
               <label htmlFor="om-service">Jenis Layanan</label>
-              <div className="om-input-wrap">
+              <div className="om-input-wrap om-select-wrap">
                 <span className="om-input-icon"><WashingMachine size={16} /></span>
-                <input
+                <select
                   id="om-service"
-                  name="service"
+                  name="serviceId"
                   required
-                  maxLength={80}
-                  placeholder="Contoh: Cuci Kering Setrika"
-                  onChange={(e) => validateField("service", e.currentTarget.value)}
-                  onBlur={(e) => validateField("service", e.currentTarget.value)}
-                  onKeyDown={(e) => {
-                    if (/^[0-9]$/.test(e.key)) {
-                      e.preventDefault();
-                      setFieldErrors((current) => ({
-                        ...current,
-                        service: "Jenis layanan wajib diisi dengan nama layanan, bukan angka.",
-                      }));
-                    }
+                  value={serviceId}
+                  disabled={!services.length}
+                  onChange={(event) => {
+                    const service = services.find((item) => item.id === event.target.value);
+                    setServiceId(event.target.value);
+                    if (service) setPrice(service.price);
+                    validateField("service", event.target.value);
                   }}
-                  onPaste={(e) => {
-                    if (/[0-9]/.test(e.clipboardData.getData("text"))) {
-                      e.preventDefault();
-                      setFieldErrors((current) => ({
-                        ...current,
-                        service: "Jenis layanan wajib diisi dengan nama layanan, bukan angka.",
-                      }));
-                    }
-                  }}
-                />
+                >
+                  {services.length ? services.map((service) => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} · Rp {service.price.toLocaleString("id-ID")}/{service.unit}
+                    </option>
+                  )) : <option value="">Tidak ada layanan aktif</option>}
+                </select>
+                <span className="om-select-arrow"><ChevronDown size={14} /></span>
               </div>
               {fieldErrors.service && <small className="om-field-error">{fieldErrors.service}</small>}
             </div>
@@ -312,7 +307,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
           {/* Row 3: Berat + Tarif */}
           <div className="om-row">
             <div className="om-field om-field--anim" style={{ "--i": 4 } as React.CSSProperties}>
-              <label htmlFor="om-weight">Berat (kg)</label>
+              <label htmlFor="om-weight">{selectedService?.unit === "kg" ? "Berat (kg)" : `Jumlah (${selectedService?.unit ?? "unit"})`}</label>
               <div className="om-input-wrap">
                 <span className="om-input-icon"><Scale size={16} /></span>
                 <input
@@ -321,17 +316,24 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   required
                   type="number"
                   min="1"
-                  step="1"
+                  step={selectedService?.unit === "kg" ? "0.1" : "1"}
                   value={weight}
-                  onBlur={(e) => validateField("weight", e.currentTarget.value)}
+                  onBlur={(e) => {
+                    const value = e.currentTarget.value;
+                    const unit = selectedService?.unit;
+                    setFieldErrors((current) => ({
+                      ...current,
+                      weight: getAddOrderFieldError("weight", value, unit),
+                    }));
+                  }}
                   onChange={(e) => setWeight(e.target.value)}
                 />
-                <span className="om-input-suffix">kg</span>
+                <span className="om-input-suffix">{selectedService?.unit ?? "unit"}</span>
               </div>
               {fieldErrors.weight && <small className="om-field-error">{fieldErrors.weight}</small>}
             </div>
             <div className="om-field om-field--anim" style={{ "--i": 5 } as React.CSSProperties}>
-              <label htmlFor="om-price">Tarif per kg</label>
+              <label htmlFor="om-price">Tarif per {selectedService?.unit ?? "unit"}</label>
               <div className="om-input-wrap">
                 <span className="om-input-icon"><Coins size={16} /></span>
                 <input
@@ -346,7 +348,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
                   onBlur={(e) => validateField("pricePerKg", e.currentTarget.value)}
                   onChange={(e) => setPrice(Math.max(1, Number(e.target.value)))}
                 />
-                <span className="om-input-suffix">/ kg</span>
+                <span className="om-input-suffix">/ {selectedService?.unit ?? "unit"}</span>
               </div>
               {fieldErrors.pricePerKg && <small className="om-field-error">{fieldErrors.pricePerKg}</small>}
             </div>
@@ -356,7 +358,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
           <div className="om-total om-field--anim" style={{ "--i": 6 } as React.CSSProperties}>
             <div className="om-total-label">
               <span>Estimasi Total</span>
-              <span className="om-total-formula">{weightValue.toLocaleString("id-ID", { maximumFractionDigits: 1 })} kg × {formatRupiah(price)}</span>
+              <span className="om-total-formula">{weightValue.toLocaleString("id-ID", { maximumFractionDigits: 1 })} {selectedService?.unit ?? "unit"} × {formatRupiah(price)}</span>
             </div>
             <div className="om-total-value">{formatRupiah(total)}</div>
           </div>
@@ -374,8 +376,8 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
             <button type="button" className="om-btn-cancel" onClick={onClose}>
               Batal
             </button>
-            <button type="submit" className="om-btn-submit">
-              Simpan Pesanan
+            <button type="submit" className="om-btn-submit" disabled={saving}>
+              {saving ? "Menyimpan..." : "Simpan Pesanan"}
             </button>
           </div>
         </form>
@@ -387,6 +389,7 @@ function AddOrderModal({ onClose, onSubmit, formError }: AddOrderModalProps) {
 /* ─── PAGE ─── */
 export default function KelolaPesanan() {
   const [orders, setOrders] = useState<LaundryOrder[]>([]);
+  const [catalogServices, setCatalogServices] = useState<CatalogService[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -395,58 +398,25 @@ export default function KelolaPesanan() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [storageError, setStorageError] = useState("");
   const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     async function loadInitialOrders() {
       try {
-        const response = await api.get("/orders");
-        if (response?.data?.orders && Array.isArray(response.data.orders) && response.data.orders.length > 0) {
-          if (isMounted) {
-            setOrders(response.data.orders.map((order: LaundryOrder) => ({
-              ...order,
-              status: normalizeOrderStatus(order.status),
-            })));
-            setIsLoaded(true);
-            return;
-          }
-        }
-      } catch {
-        // Fallback to localStorage jika backend offline
-      }
-
-      try {
-        const savedOrders = window.localStorage.getItem(STORAGE_KEY);
-        if (savedOrders && isMounted) {
-          const parsed: unknown = JSON.parse(savedOrders);
-          if (Array.isArray(parsed) && parsed.every(isLaundryOrder)) {
-            setOrders(parsed.map((order) => ({
-              ...order,
-              status: normalizeOrderStatus(order.status),
-            })));
-            setIsLoaded(true);
-            return;
-          }
+        const response = await api.get<{ orders: LaundryOrder[] }>("/orders", {
+          params: { page: 1, limit: 100 },
+        });
+        if (isMounted) {
+          setOrders(response.data.orders.map((order) => ({
+            ...order,
+            status: normalizeOrderStatus(order.status),
+          })));
         }
       } catch (error) {
-        console.error("Gagal membaca data pesanan:", error);
-        if (isMounted) setStorageError("Data pesanan tidak dapat dibaca dari browser.");
-      }
-
-      // Fallback: gunakan data dummy jika backend & localStorage kosong
-      if (isMounted) {
-        const dummyOrders = DUMMY_ORDERS.map((o) => ({
-          id: o.id,
-          customer: o.customer,
-          phone: o.phone,
-          service: o.service,
-          weight: o.weight,
-          pricePerKg: o.pricePerKg,
-          status: normalizeOrderStatus(o.status),
-          createdAt: o.createdAt,
-        }));
-        setOrders(dummyOrders as any);
-        setIsLoaded(true);
+        if (isMounted) setStorageError(error instanceof Error ? error.message : "Gagal memuat pesanan.");
+      } finally {
+        if (isMounted) setIsLoaded(true);
       }
     }
 
@@ -457,14 +427,16 @@ export default function KelolaPesanan() {
   }, []);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    } catch (error) {
-      console.error("Gagal menyimpan data pesanan:", error);
-      setStorageError("Pesanan gagal disimpan. Periksa ruang penyimpanan browser Anda.");
-    }
-  }, [isLoaded, orders]);
+    let active = true;
+    api.get<Array<CatalogService & { isActive: boolean }>>("/services", {
+      params: { activeOnly: true },
+    }).then((response) => {
+      if (active) setCatalogServices(response.data);
+    }).catch((error: unknown) => {
+      if (active) setStorageError(error instanceof Error ? error.message : "Gagal memuat katalog layanan.");
+    });
+    return () => { active = false; };
+  }, []);
 
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -498,7 +470,8 @@ export default function KelolaPesanan() {
     const formData = new FormData(form);
     const customer = String(formData.get("customer") ?? "").trim();
     const phone = String(formData.get("phone") ?? "").trim();
-    const service = String(formData.get("service") ?? "").trim();
+    const serviceId = String(formData.get("serviceId") ?? "").trim();
+    const service = catalogServices.find((item) => item.id === serviceId);
     const weight = Number(formData.get("weight"));
     const pricePerKg = Number(formData.get("pricePerKg"));
     const status = String(formData.get("status") ?? "");
@@ -508,9 +481,9 @@ export default function KelolaPesanan() {
       return;
     }
 
-    // 1. Validasi Berat: di bawah 1 tidak bisa
-    if (!Number.isFinite(weight) || !Number.isInteger(weight) || weight < 1) {
-      setFormError("Berat cucian harus berupa angka bulat minimal 1 kg.");
+    const weightError = getAddOrderFieldError("weight", String(weight), service.unit);
+    if (weightError) {
+      setFormError(weightError);
       return;
     }
 
@@ -534,77 +507,66 @@ export default function KelolaPesanan() {
       return;
     }
 
-    // 4. Validasi Jenis Layanan: tidak boleh angka
-    if (/[0-9]/.test(service)) {
-      setFormError("Jenis layanan tidak boleh mengandung angka.");
-      return;
-    }
-
     if (!Number.isFinite(pricePerKg) || pricePerKg <= 0) {
-      setFormError("Tarif per kg harus lebih besar dari 0.");
+      setFormError(`Tarif per ${service.unit} harus lebih besar dari 0.`);
       return;
     }
 
-    const newOrder: LaundryOrder = {
-      id: `ORD-${Date.now().toString().slice(-8)}`,
-      customer,
-      phone,
-      service,
-      weight,
-      pricePerKg,
-      status,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Kirim ke backend validator API
+    setSaving(true);
     try {
-      const response = await api.post("/orders", {
+      const response = await api.post<LaundryOrder>("/orders", {
         customer,
         phone,
-        service,
+        serviceId: service.id,
         weight,
         pricePerKg,
         status,
       });
-      if (response?.data?.id) {
-        newOrder.id = response.data.id;
-      }
-    } catch (apiErr: any) {
-      // Jika server backend merespon penolakan validasi (400 Bad Request)
-      if (apiErr?.status === 400 || apiErr?.data?.success === false) {
-        setFormError(apiErr?.data?.message || apiErr.message || "Validasi data gagal.");
-        return;
-      }
-      console.warn("Backend API sync notice:", apiErr?.message);
+      setOrders((current) => [response.data, ...current]);
+      setStorageError("");
+      setSearch("");
+      setStatusFilter("Semua");
+      setPage(1);
+      setIsFormOpen(false);
+      form.reset();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Pesanan gagal disimpan.");
+    } finally {
+      setSaving(false);
     }
-
-    setOrders((current) => [newOrder, ...current]);
-    setSearch("");
-    setStatusFilter("Semua");
-    setPage(1);
-    setIsFormOpen(false);
-    form.reset();
   }
 
-  function updateStatus(id: string, status: string) {
-    setOrders((current) =>
-      current.map((order) => (order.id === id ? { ...order, status } : order)),
-    );
+  async function updateStatus(id: string, status: string) {
+    try {
+      await api.patch(`/orders/${encodeURIComponent(id)}/status`, { status });
+      setOrders((current) =>
+        current.map((order) => (order.id === id ? { ...order, status } : order)),
+      );
+      setStorageError("");
+    } catch (error) {
+      setStorageError(error instanceof Error ? error.message : "Status pesanan gagal diperbarui.");
+    }
   }
 
-  function deleteOrder(id: string) {
+  async function deleteOrder(id: string) {
     const orderToDelete = orders.find((order) => order.id === id);
     if (!orderToDelete) {
       return;
     }
     if (!window.confirm(`Hapus pesanan ${orderToDelete.id}? Tindakan ini tidak dapat dibatalkan.`)) return;
 
-    const remainingFilteredCount = filteredOrders.filter((order) => order.id !== id).length;
-    setOrders((current) => current.filter((order) => order.id !== id));
-    setSelectedOrderId((current) => current === id ? null : current);
-    setPage((currentPage) =>
-      Math.min(currentPage, Math.max(1, Math.ceil(remainingFilteredCount / ITEMS_PER_PAGE))),
-    );
+    try {
+      await api.delete(`/orders/${encodeURIComponent(id)}`);
+      const remainingFilteredCount = filteredOrders.filter((order) => order.id !== id).length;
+      setOrders((current) => current.filter((order) => order.id !== id));
+      setSelectedOrderId((current) => current === id ? null : current);
+      setPage((currentPage) =>
+        Math.min(currentPage, Math.max(1, Math.ceil(remainingFilteredCount / ITEMS_PER_PAGE))),
+      );
+      setStorageError("");
+    } catch (error) {
+      setStorageError(error instanceof Error ? error.message : "Pesanan gagal dihapus.");
+    }
   }
 
   function selectOrderFromRow(event: React.MouseEvent<HTMLTableRowElement>, id: string) {
@@ -717,7 +679,9 @@ export default function KelolaPesanan() {
           )) : (
             <tr>
               <td className="order-empty" colSpan={5}>
-                {orders.length
+                {!isLoaded
+                  ? "Memuat pesanan..."
+                  : orders.length
                   ? "Tidak ada pesanan yang cocok."
                   : "Belum ada pesanan. Klik \u201cTambah Pesanan\u201d untuk mulai mencatat."}
               </td>
@@ -739,6 +703,8 @@ export default function KelolaPesanan() {
           onClose={() => setIsFormOpen(false)}
           onSubmit={addOrder}
           formError={formError}
+          saving={saving}
+          services={catalogServices}
         />
       )}
     </>

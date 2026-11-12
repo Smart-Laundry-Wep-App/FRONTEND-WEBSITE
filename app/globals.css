@@ -2450,7 +2450,8 @@ td:first-child {
   justify-content: center;
   transition: transform 0.2s var(--ease-spring),
               box-shadow 0.2s ease,
-              background-color 0.15s ease;
+  background-color 0.3s ease,
+  color 0.3s ease;
 }
 
 .save-button:hover {
@@ -2461,6 +2462,21 @@ td:first-child {
 
 .save-button:active {
   transform: translateY(1px);
+}
+
+.save-button.save-button--saving,
+.save-button.save-button--saving:hover,
+.save-button.save-button--saving:active,
+.save-button.save-button--saved,
+.save-button.save-button--saved:hover,
+.save-button.save-button--saved:active {
+  background-color: #16a34a;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28);
+}
+
+.save-button:disabled {
+  cursor: wait;
 }
 
 /* ================================
@@ -4650,7 +4666,7 @@ thead tr {
 /* Row: 2 cols */
 .om-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -4659,6 +4675,7 @@ thead tr {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .om-field-hint,
@@ -4695,6 +4712,8 @@ thead tr {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+  min-width: 0;
   height: 46px;
   background: #ffffff;
   border: 1px solid #dfe5ef;
@@ -4756,6 +4775,12 @@ thead tr {
   -webkit-appearance: none;
 }
 
+.om-input-wrap select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .om-input-wrap input::placeholder {
   color: #b4bece;
 }
@@ -4789,6 +4814,12 @@ thead tr {
 .om-input-wrap:focus-within .om-select-arrow {
   color: var(--navy);
   transform: rotate(180deg);
+}
+
+.notif-select-wrap .om-select-arrow,
+.notif-select-wrap:focus-within .om-select-arrow {
+  transform: none;
+  transition: none;
 }
 
 /* ── Live total ── */
@@ -5760,6 +5791,12 @@ thead tr {
   min-height: 46px;
 }
 
+.payment-mark-paid-button {
+  display: inline-flex;
+  width: auto;
+  margin: 0 auto;
+}
+
 /* Ukuran toolbar promo disamakan dengan kotak pencarian */
 .promo-toolbar {
   align-items: center;
@@ -6254,7 +6291,7 @@ thead tr {
   padding: 0;
   overflow: hidden;
   border: 1px solid #dce1ea;
-  border-radius: 42px;
+  border-radius: 8px;
   box-shadow: none;
 }
 
@@ -6281,7 +6318,7 @@ thead tr {
 
 .riskora-split-body {
   height: 100%;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0;
 }
 
@@ -6354,7 +6391,7 @@ thead tr {
 
 .form-column {
   min-width: 0;
-  padding: clamp(28px, 6vw, 88px);
+  padding: clamp(24px, 3.2vw, 48px);
   background: #fff;
 }
 
@@ -6470,7 +6507,7 @@ thead tr {
     height: auto;
     min-height: calc(100dvh - 24px);
     overflow: hidden;
-    border-radius: 28px;
+    border-radius: 8px;
   }
 
   .riskora-top-nav {
@@ -6559,4 +6596,38 @@ thead tr {
     padding-right: 18px;
     padding-left: 18px;
   }
+}
+
+.notif-modal-design {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 0;
+}
+
+.notif-modal-form .notif-message-wrap {
+  height: auto;
+  min-height: 120px;
+  align-items: stretch;
+}
+
+.notif-modal-form .notif-message-wrap .om-input-icon {
+  height: 46px;
+}
+
+.notif-modal-form .notif-message-wrap textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 120px;
+  padding: 12px;
+  border: 0;
+  outline: 0;
+  resize: vertical;
+  color: #1e2942;
+  background: transparent;
+  font: 13.5px var(--font-body);
+}
+
+.notif-modal-form .notif-message-wrap textarea::placeholder {
+  color: #b4bece;
 }

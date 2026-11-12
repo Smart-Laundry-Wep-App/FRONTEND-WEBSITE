@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/Header";
 import { StatCard, Pills, EmptyTable, Pagination } from "@/components/UI";
 import { QrCode, Hourglass, Clock3, SquareCheckBig, Truck } from "lucide-react";
-import { DUMMY_ORDERS, type DummyOrder } from "@/lib/dummyData";
+import api, { normalizeBackendError } from "@/lib/api";
 
 const PILL_OPTIONS = ["Semua", "Sedang Cuci", "Siap Diambil", "Pengantaran", "Selesai"];
 
@@ -30,7 +30,25 @@ function formatRupiah(amount: number) {
   }).format(amount);
 }
 
-function matchesOrderFilter(order: DummyOrder, filter: string) {
+interface DashboardOrder {
+  id: string;
+  customer: string;
+  phone: string;
+  service: string;
+  weight: number;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
+
+interface DashboardStats {
+  totalOrders: { value: number };
+  inProcess: { value: number; breakdown: string[] };
+  completed: { value: number; breakdown: string[] };
+  pending: { value: number; breakdown: string[] };
+}
+
+function matchesOrderFilter(order: DashboardOrder, filter: string) {
   if (filter === "Pengeringan") {
     return order.status === "Sedang Cuci" || order.service.toLowerCase().includes("kering");
   }
@@ -43,17 +61,38 @@ function matchesOrderFilter(order: DummyOrder, filter: string) {
 export default function Dashboard() {
   const [selectedFilter, setSelectedFilter] = useState("Semua");
   const [page, setPage] = useState(1);
+  const [orders, setOrders] = useState<DashboardOrder[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [error, setError] = useState("");
   const perPage = 5;
 
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.get<DashboardStats>("/dashboard/stats"),
+      api.get<DashboardOrder[]>("/dashboard/recent-orders", { params: { limit: 50 } }),
+    ]).then(([statsResponse, ordersResponse]) => {
+      if (!active) return;
+      setStats(statsResponse.data);
+      setOrders(ordersResponse.data);
+    }).catch((requestError: unknown) => {
+      if (active) {
+        const message = requestError instanceof Error ? requestError.message : "Gagal memuat dashboard.";
+        setError(normalizeBackendError(message));
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
   const filteredOrders = useMemo(() => {
-    if (selectedFilter === "Semua") return DUMMY_ORDERS;
-    return DUMMY_ORDERS.filter((order) => matchesOrderFilter(order, selectedFilter));
-  }, [selectedFilter]);
+    if (selectedFilter === "Semua") return orders;
+    return orders.filter((order) => matchesOrderFilter(order, selectedFilter));
+  }, [orders, selectedFilter]);
 
   const pillItems = PILL_OPTIONS.map((filter) => {
     const count = filter === "Semua"
-      ? DUMMY_ORDERS.length
-      : DUMMY_ORDERS.filter((order) => matchesOrderFilter(order, filter)).length;
+      ? orders.length
+      : orders.filter((order) => matchesOrderFilter(order, filter)).length;
     return `${filter} (${count})`;
   });
 
@@ -63,49 +102,32 @@ export default function Dashboard() {
     <>
       <Header title="Dashboard" subtitle="Ringkasan & Aktivitas Operasional Laundry" />
       <section className="content dashboard-content">
+        {error && <p className="order-error" role="alert">{error}</p>}
         <div className="stat-grid dashboard-stats">
           <StatCard
             label="TOTAL PESANAN"
-            value={<><b>142</b> Pesanan</>}
-            note="Kapasitas 82%"
+            value={<><b>{stats?.totalOrders.value ?? "—"}</b> Pesanan</>}
+            note="Total pesanan tercatat"
             icon="receipt"
           />
           <StatCard
             label="PESANAN DIPROSES"
-            value={<><b>38</b> Pesanan</>}
-            note={
-              <>
-                <span>● 21 Cuci</span>
-                <br />
-                <span>● 17 Pengering</span>
-              </>
-            }
+            value={<><b>{stats?.inProcess.value ?? "—"}</b> Pesanan</>}
+            note={stats?.inProcess.breakdown.join(" · ") ?? "Memuat data"}
             badge="Aktif"
             icon="wash"
           />
           <StatCard
             label="SELESAI"
-            value={<><b>89</b> Paket</>}
-            note={
-              <>
-                <span>● 63 Diambil</span>
-                <br />
-                <span>● 26 Di Rak</span>
-              </>
-            }
+            value={<><b>{stats?.completed.value ?? "—"}</b> Paket</>}
+            note={stats?.completed.breakdown.join(" · ") ?? "Memuat data"}
             badge="On-Time"
             icon="receipt"
           />
           <StatCard
             label="PENDING/ANTREAN"
-            value={<><b>142</b> Antrean</>}
-            note={
-              <>
-                <span>● 9 Konfirmasi</span>
-                <br />
-                <span>● 6 Timbang</span>
-              </>
-            }
+            value={<><b>{stats?.pending.value ?? "—"}</b> Antrean</>}
+            note={stats?.pending.breakdown.join(" · ") ?? "Memuat data"}
             badge="Prioritas"
             icon="clock"
           />
@@ -172,7 +194,7 @@ export default function Dashboard() {
             ) : (
               <tr>
                 <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
-                  Tidak ada pesanan dengan status "{selectedFilter}".
+                  {error ? "Data dashboard belum dapat dimuat." : `Tidak ada pesanan dengan status "${selectedFilter}".`}
                 </td>
               </tr>
             )}

@@ -3,39 +3,33 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Check, Loader2 } from "lucide-react";
+import { authApi } from "@/lib/api";
 
 export default function Logout() {
-  const [status, setStatus] = useState<"processing" | "success">("processing");
+  const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
+  const [logoutError, setLogoutError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
-
     const performLogout = async () => {
-      // 1. Bersihkan sesi admin dari storage dan cookies
+      let revokeError = "";
       try {
-        if (typeof window !== "undefined") {
-          localStorage.clear();
-          sessionStorage.clear();
-          document.cookie.split(";").forEach((cookie) => {
-            const eqPos = cookie.indexOf("=");
-            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-          });
+        await authApi.logout();
+      } catch (error) {
+        console.error("Gagal mencabut sesi di backend:", error);
+        revokeError = error instanceof Error ? error.message : "Server gagal mencabut token.";
+        if (isMounted) {
+          setLogoutError(`Sesi lokal sudah dihapus, tetapi server gagal mencabut token: ${revokeError}`);
         }
-      } catch (err) {
-        console.error("Pembersihan sesi error:", err);
       }
 
-      // 2. Beri jeda transisi halus sehingga animasi proses keluar terlihat elegan
       await new Promise((resolve) => setTimeout(resolve, 1100));
 
       if (!isMounted) return;
 
-      // 3. Status berhasil hanya ditampilkan SETELAH pembersihan sesi selesai
-      setStatus("success");
+      setStatus(revokeError ? "error" : "success");
 
-      // 4. Arahkan pengguna ke halaman login setelah logout berhasil
       const redirectTimer = setTimeout(() => {
         if (isMounted) {
           router.push("/login");
@@ -73,7 +67,7 @@ export default function Logout() {
               <div className="logout-progress-fill" />
             </div>
           </div>
-        ) : (
+        ) : status === "success" ? (
           <div className="logout-card logout-card--success" role="status" aria-live="polite">
             <div className="success-circle logout-circle-success" aria-hidden="true">
               <Check size={64} strokeWidth={2.6} className="logout-check-icon" />
@@ -81,6 +75,11 @@ export default function Logout() {
 
             <h2>LOG OUT BERHASIL!</h2>
             <p className="logout-subtext">Anda telah keluar dari akun admin. Mengalihkan ke login...</p>
+          </div>
+        ) : (
+          <div className="logout-card logout-card--success" role="alert">
+            <h2>Sesi lokal sudah dihapus</h2>
+            <p className="logout-subtext">{logoutError} Mengalihkan ke login...</p>
           </div>
         )}
       </div>
