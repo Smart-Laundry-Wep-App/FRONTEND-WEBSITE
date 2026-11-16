@@ -1,16 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import Header from "@/components/Header";
 import { ProfileIcon, InputField } from "@/components/UI";
-import { Mail, UserRound, Phone, MapPin, Shield, Eye } from "lucide-react";
+import { Mail, UserRound, Phone, MapPin, Shield, Eye, Camera, Loader2 } from "lucide-react";
 import { api, getAuthUser, setAuthUser, type UserProfile } from "@/lib/api";
+import { uploadFileToCloud } from "@/lib/upload";
 
 export default function ProfilAdmin() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError("");
+    try {
+      const uploadResult = await uploadFileToCloud(file);
+      if (!uploadResult.success || !uploadResult.url) {
+        setError(uploadResult.error || "Gagal mengunggah gambar.");
+        return;
+      }
+
+      setProfile((current) => current ? { ...current, avatar: uploadResult.url } : current);
+      // Simpan URL avatar baru
+      await api.put("/profile", { avatar: uploadResult.url });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Gagal mengunggah foto profil.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -62,9 +92,50 @@ export default function ProfilAdmin() {
           {/* PROFILE SUMMARY CARD */}
           <div className="profile-summary card">
             <div className="profile-summary-left">
-              <div className="profile-wrap">
-                <ProfileIcon />
+              <div className="profile-wrap" style={{ position: "relative" }}>
+                {profile?.avatar ? (
+                  <Image
+                    src={profile.avatar}
+                    alt="Foto Profil Admin"
+                    width={56}
+                    height={56}
+                    style={{ borderRadius: "50%", objectFit: "cover" }}
+                    unoptimized
+                  />
+                ) : (
+                  <ProfileIcon />
+                )}
                 <span className="online-dot" />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  style={{
+                    position: "absolute",
+                    bottom: "-4px",
+                    right: "-4px",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "50%",
+                    backgroundColor: "#2563eb",
+                    color: "#ffffff",
+                    border: "2px solid #ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                  title="Ganti Foto Profil"
+                >
+                  {uploading ? <Loader2 size={12} className="spin-infinite" /> : <Camera size={12} />}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  style={{ display: "none" }}
+                  onChange={handleAvatarChange}
+                />
               </div>
               <div className="profile-info">
                 <div className="profile-name-row">

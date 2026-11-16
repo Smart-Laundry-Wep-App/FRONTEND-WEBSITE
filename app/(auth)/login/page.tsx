@@ -183,9 +183,6 @@ export default function Login() {
 
         {/* Main Body Split: Left Bubble Laundry Panel | Right Login Card */}
         <div className="riskora-split-body">
-          {/* ==========================================================
-              LEFT SIDE: CLEAN WHITE LAUNDRY BUBBLE & SCA SMART LAUNDRY
-             ========================================================== */}
           <div className="preview-column">
             <div className="laundry-bubble-panel">
               <Image
@@ -216,9 +213,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* ==========================================================
-              RIGHT SIDE: LOGIN FORM CARD (Kotak Tumpul / Rounded Rect)
-             ========================================================== */}
           <div className="form-column">
             <div className="login-inner-card">
               <Image
@@ -242,7 +236,6 @@ export default function Login() {
 
               {/* Form Element */}
               <form onSubmit={handleSubmit} className="actual-form">
-                {/* ERROR / SUCCESS ALERTS */}
                 {error && (
                   <div role="alert" className="form-alert error-alert">
                     <AlertCircle size={16} className="alert-inline-icon" />
@@ -257,7 +250,6 @@ export default function Login() {
                   </div>
                 )}
 
-                {/* EMAIL / USERNAME */}
                 <div className="form-group">
                   <label htmlFor="login-identifier">
                     {lang === "id" ? "EMAIL / USERNAME" : "EMAIL / USERNAME"}
@@ -281,7 +273,6 @@ export default function Login() {
                   </div>
                 </div>
 
-                {/* PASSWORD */}
                 <div className="form-group">
                   <label htmlFor="login-password">
                     {lang === "id" ? "PASSWORD" : "PASSWORD"}
@@ -311,12 +302,10 @@ export default function Login() {
                   </div>
                 </div>
 
-                {/* LUPA PASSWORD */}
                 <div className="forgot-pass-wrap">
                   <a href="#">{lang === "id" ? "Lupa Password?" : "Forgot Password?"}</a>
                 </div>
 
-                {/* SUBMIT BUTTON (Kotak Tumpul / Rounded Rect) */}
                 <button
                   type="submit"
                   className="login-submit-btn"
@@ -370,16 +359,12 @@ export default function Login() {
                         : "Sign in with Google"}
                   </span>
                 </button>
-
               </form>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ==========================================================
-          INTERACTIVE HELP MODAL
-         ========================================================== */}
       {showHelpModal && (
         <div
           className="help-modal-overlay"
