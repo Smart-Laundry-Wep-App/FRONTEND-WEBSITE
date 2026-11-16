@@ -2,6 +2,7 @@
  * SCA Smart Laundry - API Client Utility
  * Terkonfigurasi dengan Base URL dari NEXT_PUBLIC_API_URL
  */
+import Cookies from "js-cookie";
 
 export const API_BASE_URL =
   (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
@@ -60,10 +61,10 @@ export class ApiError extends Error {
   }
 }
 
-// Token & Session Storage Helpers (Client-side safe)
+// Token & Session Storage Helpers (Client-side safe, synced with Cookie for Next.js Middleware)
 export const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+  return Cookies.get(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
 };
 
 export const getAuthUser = (): UserProfile | null => {
@@ -81,6 +82,8 @@ export const setAuthSession = (token: string, user: UserProfile): void => {
   if (typeof window === "undefined") return;
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  // Sinkronisasi cookie untuk dibaca oleh Next.js Edge Middleware
+  Cookies.set(TOKEN_KEY, token, { expires: 7, path: "/", sameSite: "lax" });
 };
 
 export const setAuthUser = (user: UserProfile): void => {
@@ -92,6 +95,7 @@ export const clearAuthSession = (): void => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  Cookies.remove(TOKEN_KEY, { path: "/" });
 };
 
 export const isAuthenticated = (): boolean => {

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef, type FormEvent } from "react";
+import Link from "next/link";
+import { orderSchema } from "@/lib/validations/order.schema";
 import { X, User, Phone, WashingMachine, Scale, Coins, AlertCircle, ClipboardList, ChevronDown, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import {
@@ -641,7 +643,13 @@ export default function KelolaPesanan() {
               }}
             >
               <td>
-                <strong>{order.id}</strong>
+                <Link
+                  href={`/kelola-pesanan/${encodeURIComponent(order.id)}`}
+                  style={{ color: "#2563eb", textDecoration: "none" }}
+                  title="Lihat Detail Pesanan"
+                >
+                  <strong>{order.id}</strong>
+                </Link>
                 <small>{new Date(order.createdAt).toLocaleDateString("id-ID")}</small>
               </td>
               <td>
