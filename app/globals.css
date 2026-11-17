@@ -6278,16 +6278,17 @@ thead tr {
   height: 100dvh;
   min-height: 0;
   max-height: none;
-  padding: 32px;
+  padding: clamp(24px, 3vw, 40px);
   overflow: auto;
   background: #f7f8fc;
 }
 
 .riskora-container-card {
-  width: min(100%, 1200px);
-  height: min(880px, calc(100dvh - 64px));
+  width: 100%;
+  max-width: none;
+  height: calc(100dvh - 80px);
   max-height: none;
-  min-height: 460px;
+  min-height: 0;
   padding: 0;
   overflow: hidden;
   border: 1px solid #dce1ea;
@@ -6318,7 +6319,7 @@ thead tr {
 
 .riskora-split-body {
   height: 100%;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr);
   gap: 0;
 }
 
@@ -6342,7 +6343,7 @@ thead tr {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 48%;
+  max-height: 60%;
   object-fit: contain;
   object-position: center bottom;
 }
@@ -6355,9 +6356,13 @@ thead tr {
 .bubble-hero-title {
   margin: 0 0 12px;
   color: #2026ae;
-  font-size: clamp(17px, 1.5vw, 22px);
+  font-size: clamp(11px, 1vw, 14px);
   line-height: 1.1;
   letter-spacing: 1px;
+}
+
+.bubble-hero-title br {
+  display: none;
 }
 
 .bubble-hero-title span {
@@ -6367,25 +6372,26 @@ thead tr {
 }
 
 .reference-login-heading {
+  max-width: 450px;
   margin: 0 0 8px;
   color: #17213a;
-  font-size: clamp(17px, 1.6vw, 22px);
+  font-size: clamp(20px, 2.8vw, 36px);
   font-weight: 600;
   line-height: 1.25;
 }
 
 .bubble-hero-desc {
-  max-width: 390px;
+  max-width: 480px;
   margin: 0;
   color: #5e687d;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
 .reference-login-promise {
   margin: 10px 0 0;
   color: #34425e;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -6396,7 +6402,7 @@ thead tr {
 }
 
 .login-inner-card {
-  max-width: 440px;
+  max-width: 370px;
   padding: 20px 0;
   border: 0;
   border-radius: 0;
@@ -6423,25 +6429,25 @@ thead tr {
 .login-card-title {
   margin: 0 0 2px;
   color: #101828;
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.4px;
 }
 
 .login-inner-card .auth-tag {
   margin: 0 0 4px;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.7px;
 }
 
 .login-card-subtitle {
   margin: 0 0 18px;
   color: #667085;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .login-inner-card .form-group {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .login-inner-card .form-group label {
@@ -6452,10 +6458,14 @@ thead tr {
 }
 
 .login-inner-card .input-wrap {
-  height: 40px;
+  height: 42px;
   border-color: #6978e8;
   border-radius: 6px;
   background: #f9faff;
+}
+
+.login-inner-card .input-wrap input {
+  font-size: 12px;
 }
 
 .login-inner-card .input-wrap input::placeholder {
@@ -6467,7 +6477,7 @@ thead tr {
 }
 
 .login-inner-card .login-submit-btn {
-  height: 40px;
+  height: 42px;
   border-radius: 6px;
   background: #2026ae;
   box-shadow: none;
@@ -6484,7 +6494,7 @@ thead tr {
 }
 
 .login-inner-card .google-sign-btn {
-  height: 36px;
+  height: 38px;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
   font-size: 11px;
